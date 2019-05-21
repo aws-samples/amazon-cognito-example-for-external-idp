@@ -1,0 +1,11 @@
+**/.DS_Store
+**/.idea
+**/*.iml
+**/*.js
+**/*.d.ts
+**/node_modules
+!webpack.config.js
+**/.nyc_output
+**/coverage
+**/dist
+local-env.sh

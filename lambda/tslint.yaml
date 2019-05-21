@@ -1,0 +1,32 @@
+---
+extends: "tslint:recommended"
+rules:
+  no-console: false
+  object-literal-sort-keys: false
+  interface-name:
+    options: never-prefix
+  space-before-function-paren: false
+  ordered-imports: false
+  no-empty: false
+  object-literal-key-quotes: false
+#
+#rules:
+#  max-line-length:
+#    options: [120]
+#  new-parens: true
+#  no-arg: true
+#  no-bitwise: true
+#  no-conditional-assignment: true
+#  no-consecutive-blank-lines: false
+#  no-console:
+#    severity: warning
+#    options:
+#      - debug
+#      - info
+#      - log
+#      - time
+#      - timeEnd
+#      - trace
+#jsRules:
+#  max-line-length:
+#    options: [120]

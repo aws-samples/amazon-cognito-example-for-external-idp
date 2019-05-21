@@ -1,0 +1,25 @@
+{
+  "name": "cognito-backend-refresh-token-infra",
+  "version": "0.1.0",
+  "bin": {
+    "cdk": "bin/cdk.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "cdk": "cdk"
+  },
+  "devDependencies": {
+    "@types/node": "^8.9.4",
+    "typescript": "^3.1.2",
+    "aws-cdk": "^0.24.1"
+  },
+  "dependencies": {
+    "@aws-cdk/aws-dynamodb": "^0.24.1",
+    "@aws-cdk/aws-lambda": "^0.24.1",
+    "@aws-cdk/aws-serverless": "^0.24.1",
+    "@aws-cdk/cdk": "^0.24.1",
+    "@aws-cdk/aws-apigateway": "^0.24.1",
+    "source-map-support": "^0.5.9"
+  }
+}
