@@ -4,33 +4,26 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && webpack",
     "watch": "tsc -w",
     "test": "mocha -r ts-node/register tests/**/*.test.ts",
     "testWithCoverage": "nyc -r lcov -e .ts -x \"*.test.ts\" mocha -r ts-node/register tests/**/*.test.ts && nyc report"
   },
   "keywords": [],
   "author": "",
+  "private": true,
   "license": "",
   "devDependencies": {
     "@types/aws-lambda": "^8.10.19",
-    "@types/chai": "^4.1.7",
-    "@types/mocha": "^5.2.6",
-    "@types/node": "^11.9.4",
-    "@types/request-promise-native": "^1.0.15",
-    "@types/uuid": "^3.4.4",
+    "@types/node": "^12.0.2",
     "aws-sdk": "^2.411.0",
-    "chai": "^4.2.0",
-    "dynamodb-local": "0.0.26",
     "mocha": "^6.1.4",
     "nyc": "^14.1.0",
     "ts-node": "^8.0.2",
     "tslint": "^5.13.0",
-    "typescript": "^3.3.3333",
-    "webpack": "^4.29.5",
-    "webpack-cli": "^3.2.3"
+    "typescript": "^3.4.5",
+    "webpack": "^4.32.2",
+    "webpack-cli": "^3.3.2"
   },
-  "dependencies": {
-    "aws-serverless-express": "^3.3.6"
-  }
+  "dependencies": {}
 }

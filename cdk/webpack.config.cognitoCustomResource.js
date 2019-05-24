@@ -15,12 +15,14 @@
  *
  */
 
-import cdk = require("@aws-cdk/cdk");
-import "source-map-support/register";
-import {CdkStack} from "../lib/cdk-stack";
 
-const app = new cdk.App();
-// tslint:disable-next-line:no-unused-expression
-new CdkStack(app, "CognitoLDAPDemo");
-
-app.run();
+module.exports = {
+  entry: ['./dist/customResources/cognitoCustomResourceHandler.js'],
+  target: 'node',
+  mode: 'production',
+  output: {
+    path: `${process.cwd()}/dist/cognitoCustomResourceHandler/packed`,
+    filename: 'index.js',
+    libraryTarget: 'umd'
+  }
+};

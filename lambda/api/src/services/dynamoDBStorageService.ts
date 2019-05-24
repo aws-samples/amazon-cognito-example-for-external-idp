@@ -26,18 +26,15 @@ export class DynamoDBStorageService implements StorageService {
   private readonly docClient: DocumentClient;
 
   constructor(private readonly tableName: string, endpoint?: string) {
-
     this.docClient = new AWS.DynamoDB.DocumentClient(endpoint ? {endpoint} : undefined);
   }
 
-  public async getPet(key: string): Promise<Pet | undefined> {
+  public async getPet(id: string): Promise<Pet | undefined> {
 
     try {
       const data = await this.docClient.get({
         TableName: this.tableName,
-        Key: {
-          key,
-        },
+        Key: {id},
         ConsistentRead: true,
 
       }).promise();
@@ -61,7 +58,7 @@ export class DynamoDBStorageService implements StorageService {
     }
   }
 
-  async getAllPets(): Promise<Pet[]> {
+  public async getAllPets(): Promise<Pet[]> {
     try {
 
       const result: Pet[] = [];

@@ -5,21 +5,25 @@
     "cdk": "bin/cdk.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && webpack --config=cognitoCustomResource",
     "watch": "tsc -w",
     "cdk": "cdk"
   },
   "devDependencies": {
-    "@types/node": "^8.9.4",
-    "typescript": "^3.1.2",
-    "aws-cdk": "^0.24.1"
+    "@types/aws-lambda": "^8.10.26",
+    "@types/node": "^12.0.2",
+    "aws-cdk": "^0.31.0",
+    "typescript": "^3.4.5",
+    "webpack": "^4.32.2",
+    "webpack-cli": "^3.3.2"
   },
   "dependencies": {
-    "@aws-cdk/aws-dynamodb": "^0.24.1",
-    "@aws-cdk/aws-lambda": "^0.24.1",
-    "@aws-cdk/aws-serverless": "^0.24.1",
-    "@aws-cdk/cdk": "^0.24.1",
-    "@aws-cdk/aws-apigateway": "^0.24.1",
-    "source-map-support": "^0.5.9"
+    "@aws-cdk/aws-apigateway": "^0.31.0",
+    "@aws-cdk/aws-cognito": "^0.31.0",
+    "@aws-cdk/aws-dynamodb": "^0.31.0",
+    "@aws-cdk/aws-lambda": "^0.31.0",
+    "@aws-cdk/aws-serverless": "^0.28.0",
+    "@aws-cdk/cdk": "^0.31.0",
+    "source-map-support": "^0.5.12"
   }
 }

@@ -1,3 +1,5 @@
 *.js
+!webpack.config.js
+!webpack.config.cognitoCustomResource.js
 *.d.ts
 node_modules

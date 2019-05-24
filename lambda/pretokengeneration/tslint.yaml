@@ -1,0 +1,12 @@
+---
+extends: "tslint:recommended"
+rules:
+  no-console: false
+  object-literal-sort-keys: false
+  interface-name:
+    options: never-prefix
+  space-before-function-paren: false
+  ordered-imports: false
+  no-empty: false
+  object-literal-key-quotes: false
+  jsdoc-format: false

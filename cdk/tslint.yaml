@@ -5,3 +5,5 @@ rules:
   object-literal-sort-keys: false
   no-unused-expression: false
   ordered-imports: false
+  quotemark:
+    options: double

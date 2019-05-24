@@ -9,12 +9,12 @@ import {Pet} from "../model/pet";
 Amplify.configure({Auth: AUTH_OPTS});
 
 interface State {
-  authState: 'signedIn' | 'signIn' | 'loading';
-  authError: any;
-  user: CognitoUser | null;
-  pets: Pet[] | null;
+  authState?: 'signedIn' | 'signIn' | 'loading';
+  user?: CognitoUser;
+  pets?: Pet[];
   error?: any;
-  selectedPet: Pet;
+  message?: string;
+  selectedPet?: Pet;
 }
 
 const numberFormat = new Intl.NumberFormat(undefined, {
@@ -33,10 +33,6 @@ class App extends Component<any, State> {
 
     this.state = {
       authState: 'loading',
-      user: null,
-      authError: null,
-      pets: null,
-      selectedPet: new Pet(0, "", 0)
     }
   }
 
@@ -45,10 +41,10 @@ class App extends Component<any, State> {
     Hub.listen('auth', ({payload: {event, data}}) => {
       switch (event) {
         case 'signIn':
-          this.setState({authState: 'signedIn', user: data, authError: null});
+          this.setState({authState: 'signedIn', user: data, error: null});
           break;
         case 'signIn_failure':
-          this.setState({authState: 'signIn', user: null, authError: data});
+          this.setState({authState: 'signIn', user: null, error: data});
           break;
         default:
           break;
@@ -75,65 +71,10 @@ class App extends Component<any, State> {
     }
   }
 
-  private async getAllPets() {
-    try {
-      // check the current user when the App component is loaded
-      let session = await Auth.currentSession();
-      let result = await fetch(API_URL + "/pets", {
-        method: "GET",
-        headers: {"Authorization": session.getIdToken().getJwtToken()}
-      });
-
-      let pets = await result.json();
-
-      this.setState({pets});
-    } catch (e) {
-      console.error(e);
-      this.setState({error: "Failed to load pets"});
-    }
-  }
-
-  private async savePet(event: FormEvent<HTMLFormElement>) {
-
-    event.preventDefault();
-
-    const pet = this.state.selectedPet;
-
-    if (!pet) {
-      this.setState({error: "Pet is needed"});
-      return;
-    }
-
-    try {
-      let session = await Auth.currentSession();
-      await fetch(API_URL + "/pets", {
-        body: JSON.stringify(pet),
-        method: "POST",
-        headers: {
-          "Authorization": session.getIdToken().getJwtToken(),
-          "Content-Type": "application/json"
-        }
-      });
-
-      return this.getAllPets();
-    } catch (e) {
-      console.error(e);
-      this.setState({error: "Failed to load pets"});
-    }
-  }
-
-  async signOut() {
-    try {
-      await Auth.signOut();
-      this.setState({authState: 'signIn', pets: null, user: null});
-    } catch (e) {
-      console.log(e);
-    }
-  }
 
   render() {
 
-    const {authState, pets, user, error, selectedPet}: Readonly<State> = this.state;
+    const {authState, pets, user, error, selectedPet, message}: Readonly<State> = this.state;
     const username = user != null ? user.getUsername() : null;
 
     return (
@@ -165,43 +106,60 @@ class App extends Component<any, State> {
             </div>
           </div>
         </nav>
-        {error && <div className="alert alert-warning">{error.toString()}</div>}
-        {authState === 'signedIn' && <div className="container">
-          {pets &&
-          <table className="table">
-            <thead>
-            <tr>
-              <th>id</th>
-              <th>type</th>
-              <th>price</th>
-            </tr>
 
-            </thead>
-            <tbody>
-            {pets.map(pet =>
-              <tr id={"row" + pet.id} key={pet.id} onClick={() => this.setState({selectedPet: pet})}>
-                <td><span className='badge badge-secondary'>{pet.id}</span></td>
-                <td><strong>{pet.type}</strong></td>
-                <td>{numberFormat.format(pet.price)}</td>
-              </tr>)
-            }
-            </tbody>
-          </table>}
+        <div className="container-fluid">
 
-          {selectedPet &&
-          <form onSubmit={e => this.savePet(e)}>
-            <input className="form-control" type="text" value={selectedPet.id} placeholder="Id"
-                   onChange={e => this.handleChange(e, (state, value) => state.selectedPet.id = Number(value))}/>
-            <input className="form-control" type="text" value={selectedPet.type} placeholder="Type"
-                   onChange={e => this.handleChange(e, (state, value) => state.selectedPet.type = value)}/>
-            <input className="form-control" type="text" value={selectedPet.price} placeholder="Price"
-                   onChange={e => this.handleChange(e, (state, value) => state.selectedPet.price = Number(value))}/>
-            <input type="submit" className="btn btn-success" value="Save"/>
-          </form>}
+          {/* Error Messages */}
 
-          {!pets && !error && <div className="alert alert-info">loading...</div>}
+          {error &&
+          <div className="alert alert-warning" onClick={() => this.setState({error: null})}>{error.toString()}</div>}
 
-        </div>}
+          {message &&
+          <div className="alert alert-info" onClick={() => this.setState({message: null})}>{message.toString()}</div>}
+
+          {authState === 'signIn' && <div className="alert alert-info">Please sign in</div>}
+
+          {authState === 'signedIn' && <div className="container">
+            {pets &&
+            <table className="table">
+              <thead>
+              <tr>
+                <th>id</th>
+                <th>type</th>
+                <th>price</th>
+              </tr>
+
+              </thead>
+              <tbody>
+              {pets.map(pet =>
+                <tr id={"row" + pet.id} key={pet.id} onClick={() => this.setState({selectedPet: pet})}>
+                  <td><span className='badge badge-secondary'>{pet.id}</span></td>
+                  <td><strong>{pet.type}</strong></td>
+                  <td>{numberFormat.format(pet.price || 0)}</td>
+                </tr>)
+              }
+              </tbody>
+            </table>}
+
+            {selectedPet &&
+            <form onSubmit={e => this.savePet(e)}>
+              <input className="form-control" type="hidden" value={selectedPet.id || ""} placeholder="Id"
+                     onChange={e => this.handleChange(e, (state, value) => state.selectedPet.id = value)}/>
+              <input className="form-control" type="text" value={selectedPet.type || ""} placeholder="Type"
+                     onChange={e => this.handleChange(e, (state, value) => state.selectedPet.type = value)}/>
+              <input className="form-control" type="text" value={selectedPet.price || ""} placeholder="Price"
+                     onChange={e => this.handleChange(e, (state, value) => state.selectedPet.price = value as number)}/>
+              <input type="submit" className="btn btn-success" value={selectedPet.id ? "Update" : "Save"}/>
+            </form>}
+
+            {<button className="btn btn-primary" onClick={() => this.newOnClick()}>Create New</button>}
+
+            {!pets && !error && <div className="alert alert-info">loading...</div>}
+
+          </div>}
+
+        </div>
+
 
       </React.Fragment>
     );
@@ -215,6 +173,95 @@ class App extends Component<any, State> {
     });
   }
 
+  newOnClick() {
+    // we explicitly set to null, undefined causes react to assume there was no change
+    this.setState({selectedPet: new Pet()});
+
+  }
+
+  async getAllPets() {
+    try {
+      // check the current user when the App component is loaded
+      let session = await Auth.currentSession();
+      let result = await fetch(API_URL + "/pets", {
+        method: "GET",
+        headers: {"Authorization": session.getIdToken().getJwtToken()}
+      });
+
+      let pets = await result.json();
+
+      this.setState({pets});
+    } catch (e) {
+      console.error(e);
+      this.setState({error: "Failed to load pets"});
+    }
+  }
+
+  async savePet(event: FormEvent<HTMLFormElement>) {
+
+    event.preventDefault();
+
+    const pet = this.state.selectedPet;
+
+    if (!pet) {
+      this.setState({error: "Pet is needed"});
+      return;
+    }
+    let result: Response;
+    try {
+      let session = await Auth.currentSession();
+
+      let petId = pet.id;
+      if (petId) {
+
+        result = await fetch(`${API_URL}/pets/${petId}`, {
+          body: JSON.stringify(pet),
+          method: "PUT",
+          headers: {
+            "Authorization": session.getIdToken().getJwtToken(),
+            "Content-Type": "application/json"
+          }
+        });
+      } else {
+        result = await fetch(`${API_URL}/pets`, {
+          body: JSON.stringify(pet),
+          method: "POST",
+          headers: {
+            "Authorization": session.getIdToken().getJwtToken(),
+            "Content-Type": "application/json"
+          }
+        });
+      }
+      if (!result.ok) {
+        let errorText = await result.text();
+        this.setState({error: result.status + " " + errorText});
+      } else {
+        this.showMessage("");
+        this.setState({message: (petId ? "Updated" : "Saved") + " successfully"});
+      }
+      return this.getAllPets();
+    } catch (e) {
+      console.error(e);
+      this.setState({error: "Failed to save pets"});
+    }
+  }
+
+  async signOut() {
+    try {
+      await Auth.signOut();
+      this.setState({authState: 'signIn', pets: null, user: null});
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  private showMessage(s: string) {
+    setTimeout(() => {
+      this.setState({
+        message: null
+      });
+    }, 3000);
+  }
 }
 
 export default App;

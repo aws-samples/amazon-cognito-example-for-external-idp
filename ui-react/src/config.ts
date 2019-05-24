@@ -19,8 +19,8 @@ const OAUTH_OPTS: AwsCognitoOAuthOpts = {
 
 export const AUTH_OPTS: AuthOptions = {
 
-  // REQUIRED only for Federated Authentication - Amazon Cognito Identity Pool ID
-  identityPoolId: 'us-west-2:1f2d0617-6cb4-47b9-b04b-d3ccaf088da5',
+  // // REQUIRED only for Federated Authentication - Amazon Cognito Identity Pool ID
+  // identityPoolId: 'us-west-2:1f2d0617-6cb4-47b9-b04b-d3ccaf088da5',
 
   // REQUIRED - Amazon Cognito Region
   region: 'us-west-2',
@@ -57,4 +57,5 @@ export const AUTH_OPTS: AuthOptions = {
   authenticationFlowType: 'USER_PASSWORD_AUTH'*/
 };
 
-export const API_URL = "https://4h6zxbzxs2.execute-api.us-west-2.amazonaws.com/prod";
+export const API_URL = "https://e8vy0syvsi.execute-api.us-west-2.amazonaws.com/prod/";
+//export const API_URL = "http://localhost:3001";

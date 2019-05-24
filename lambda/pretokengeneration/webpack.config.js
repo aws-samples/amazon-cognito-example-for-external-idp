@@ -15,19 +15,13 @@
  *
  */
 
-import {HttpRequest, HttpResponse, HttpService} from "../../src/services/httpService";
-
-/**
- * a fixture that simulates an http client with a predetermined response
- */
-export class MockHttpService implements HttpService {
-  constructor(private fixedResponse: HttpResponse) {
+module.exports = {
+  entry: ['./dist/index.js'],
+  target: 'node',
+  mode: 'production',
+  output: {
+    path: `${process.cwd()}/dist/packed`,
+    filename: 'index.js',
+    libraryTarget: 'umd'
   }
-
-  // noinspection JSUnusedLocalSymbols
-  public request(req: HttpRequest): Promise<HttpResponse> {
-    return new Promise<HttpResponse>((resolve) => {
-      resolve(this.fixedResponse);
-    });
-  }
-}
+};
