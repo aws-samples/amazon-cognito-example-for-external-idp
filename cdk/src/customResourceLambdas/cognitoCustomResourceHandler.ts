@@ -147,13 +147,13 @@ export const handler = (new class extends CustomResourceHandler<CognitoCustomRes
     }
 
     if (preTokenGenerationLambdaArn) {
-      console.log("Updating PreTokenGeneration lambda");
+      console.log("Updating PreTokenGeneration lambda", preTokenGenerationLambdaArn);
       await cognitoIdP.updateUserPool({
         UserPoolId: userPoolId,
         LambdaConfig: {
           PreTokenGeneration: preTokenGenerationLambdaArn
         }
-      });
+      }).promise();
       console.log("Updated PreTokenGeneration lambda");
     }
 
@@ -197,7 +197,7 @@ export const handler = (new class extends CustomResourceHandler<CognitoCustomRes
               }).promise();
 
               console.log(describeUserPoolDomainResult.DomainDescription);
-              if (describeUserPoolDomainResult.DomainDescription === {} || !describeUserPoolDomainResult.DomainDescription) {
+              if (!describeUserPoolDomainResult.DomainDescription!.Domain) {
                 clearInterval(x);
                 console.log("Deleting domain succeeded");
                 resolve();

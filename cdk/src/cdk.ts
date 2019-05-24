@@ -108,7 +108,7 @@ export class CdkStack extends cdk.Stack {
       },
     });
 
-    const cognitoCustomResources = new CognitoCustomResourceConstruct(this, 'CognitoCustomResources', {
+    const cognitoCustomResources = new CognitoCustomResourceConstruct(this, "CognitoCustomResources", {
       UserPoolId: userPool.userPoolId,
       PreTokenGenerationLambdaArn: preTokenGeneration.functionArn,
       CreateUserPoolDomainRequest: {
@@ -146,27 +146,27 @@ export class CdkStack extends cdk.Stack {
     cognitoCustomResources.lambda.addToRolePolicy(customResourceLambdaPolicy);
 
     // Publish the custom resource output
-    new cdk.CfnOutput(this, 'APIUrl', {
-      description: 'API URL',
+    new cdk.CfnOutput(this, "APIUrl", {
+      description: "API URL",
       value: api.url
     });
-    new cdk.CfnOutput(this, 'UserPoolId', {
-      description: 'UserPool ID',
+    new cdk.CfnOutput(this, "UserPoolId", {
+      description: "UserPool ID",
       value: userPool.userPoolId
     });
 
-    new cdk.CfnOutput(this, 'AppClientId', {
-      description: 'App Client ID',
+    new cdk.CfnOutput(this, "AppClientId", {
+      description: "App Client ID",
       value: cognitoCustomResources.response.AppClientId
     });
 
-    new cdk.CfnOutput(this, 'Region', {
-      description: 'Region',
+    new cdk.CfnOutput(this, "Region", {
+      description: "Region",
       value: cognitoCustomResources.response.Region
     });
 
-    new cdk.CfnOutput(this, 'CognitoDomain', {
-      description: 'Cognito Domain',
+    new cdk.CfnOutput(this, "CognitoDomain", {
+      description: "Cognito Domain",
       value: cognitoCustomResources.response.Domain
     });
 
@@ -175,7 +175,7 @@ export class CdkStack extends cdk.Stack {
 
 const app = new cdk.App();
 // tslint:disable-next-line:no-unused-expression
-new CdkStack(app, "ReInforce2019DemoTest5");
+new CdkStack(app, "ReInforce2019DemoTest6");
 
 app.run();
 
