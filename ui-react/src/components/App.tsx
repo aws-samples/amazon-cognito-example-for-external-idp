@@ -188,7 +188,7 @@ class App extends Component<any, State> {
         headers: {"Authorization": session.getIdToken().getJwtToken()}
       });
 
-      let pets = await result.json();
+      let pets = JSON.parse(atob(await result.text()));
 
       this.setState({pets});
     } catch (e) {

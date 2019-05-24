@@ -46,8 +46,9 @@ export class CdkStack extends cdk.Stack {
         name: groupsAttributeName,
         attributeDataType: "String",
         mutable: true,
-        required: false
-      }]
+        required: false,
+      }],
+      autoVerifiedAttributes: ["email"]
     });
 
     // dynamodb table
@@ -90,7 +91,9 @@ export class CdkStack extends cdk.Stack {
     });
 
 
-    api.root.addResource("{proxy+}").addMethod("ANY", integration, {
+    let proxyResource = api.root.addResource("{proxy+}");
+    proxyResource.addMethod("OPTIONS", integration);
+    proxyResource.addMethod("ANY", integration, {
       authorizerId: cfnAuthorizer.authorizerId,
       authorizationType: AuthorizationType.Cognito
     });
