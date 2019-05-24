@@ -175,7 +175,7 @@ export class CdkStack extends cdk.Stack {
 
 const app = new cdk.App();
 // tslint:disable-next-line:no-unused-expression
-new CdkStack(app, "ReInforce2019DemoTest6");
+new CdkStack(app, "ReInforce2019Demo");
 
 app.run();
 
