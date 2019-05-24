@@ -263,7 +263,7 @@ export const handler = (new class extends CustomResourceHandler<CognitoCustomRes
   // noinspection JSUnusedGlobalSymbols,JSUnusedLocalSymbols
   async onUpdate(event: CloudFormationCustomResourceUpdateEvent, _context: Context): Promise<CognitoCustomResourceResult> {
 
-    console.log("onCreate called. Region: " + region);
+    console.log("onUpdate called. Region: " + region);
     const result: CognitoCustomResourceResult = {
       Region: region
     };
@@ -275,6 +275,7 @@ export const handler = (new class extends CustomResourceHandler<CognitoCustomRes
     const userPoolId = resourceProperties.UserPoolId;
 
     const createUserPoolClientRequest = resourceProperties.CreateUserPoolClientRequest;
+
     const createDomainRequest = resourceProperties.CreateUserPoolDomainRequest;
     const createIdentityProviderRequest = resourceProperties.CreateIdentityProviderRequest;
     const preTokenGenerationLambdaArn = resourceProperties.PreTokenGenerationLambdaArn;
@@ -328,38 +329,40 @@ export const handler = (new class extends CustomResourceHandler<CognitoCustomRes
         createUserPoolClientRequest.SupportedIdentityProviders = ["COGNITO"];
       }
 
-        while (true) {
+      delete createUserPoolClientRequest.GenerateSecret; //the only field that is different between create or update
 
-          const listUserPoolClientsRequest: CognitoTypes.ListUserPoolClientsRequest = {
-            UserPoolId: userPoolId
-          };
+      while (true) {
 
-          let describeUserPoolResult = await cognitoIdP.listUserPoolClients(listUserPoolClientsRequest).promise();
-          if (describeUserPoolResult.UserPoolClients) {
-            const found = describeUserPoolResult.UserPoolClients.find(x => x.ClientName === createUserPoolClientRequest.ClientName);
-            if (found && found.ClientId) {
+        const listUserPoolClientsRequest: CognitoTypes.ListUserPoolClientsRequest = {
+          UserPoolId: userPoolId
+        };
 
-              console.log("about to update user pool client with id " + found.ClientId);
-              
-              let createUserPoolClientResponse = await cognitoIdP.updateUserPoolClient({
-                UserPoolId: userPoolId,
-                ClientId: found.ClientId,
-                ...createUserPoolClientRequest
-              }).promise();
+        let describeUserPoolResult = await cognitoIdP.listUserPoolClients(listUserPoolClientsRequest).promise();
+        if (describeUserPoolResult.UserPoolClients) {
+          const found = describeUserPoolResult.UserPoolClients.find(x => x.ClientName === createUserPoolClientRequest.ClientName);
+          if (found && found.ClientId) {
 
-              result.AppClientId = createUserPoolClientResponse.UserPoolClient!.ClientId;
+            console.log("about to update user pool client with id " + found.ClientId);
 
-              console.log("update user pool client with id " + found.ClientId);
-              break;
-            }
-          }
+            let createUserPoolClientResponse = await cognitoIdP.updateUserPoolClient({
+              UserPoolId: userPoolId,
+              ClientId: found.ClientId,
+              ...createUserPoolClientRequest
+            }).promise();
 
-          if (!describeUserPoolResult.NextToken) {
+            result.AppClientId = createUserPoolClientResponse.UserPoolClient!.ClientId;
+
+            console.log("update user pool client with id " + found.ClientId);
             break;
           }
-
-          listUserPoolClientsRequest.NextToken = describeUserPoolResult.NextToken;
         }
+
+        if (!describeUserPoolResult.NextToken) {
+          break;
+        }
+
+        listUserPoolClientsRequest.NextToken = describeUserPoolResult.NextToken;
+      }
 
     }
 
@@ -379,8 +382,7 @@ export const handler = (new class extends CustomResourceHandler<CognitoCustomRes
     }
 
     return result;
-    
-    
-    
+
+
   }
 }).handler;

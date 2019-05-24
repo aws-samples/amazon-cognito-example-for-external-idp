@@ -75,7 +75,13 @@ class App extends Component<any, State> {
   render() {
 
     const {authState, pets, user, error, selectedPet, message}: Readonly<State> = this.state;
-    const username = user != null ? user.getUsername() : null;
+    let username = null;
+    if (user && user.getSignInUserSession() && user.getSignInUserSession().isValid()) {
+      username = user.getSignInUserSession().getIdToken().decodePayload()["email"];
+      if (!username) {
+        username = user.getUsername();
+      }
+    }
 
     return (
       <React.Fragment>

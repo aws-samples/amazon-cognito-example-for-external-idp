@@ -125,8 +125,8 @@ export class CdkStack extends cdk.Stack {
         AllowedOAuthScopes: ["phone", "email", "openid"],
         GenerateSecret: false,
         RefreshTokenValidity: 1,
-        CallbackURLs: ["http://localhost:3000/"],
-        LogoutURLs: ["http://localhost:3000/"],
+        CallbackURLs: ["http://localhost:3000/, http://localhost:3001/"],
+        LogoutURLs: ["http://localhost:3000/", "http://localhost:3001/"],
       },
       // CreateIdentityProviderRequest: {
       //   ProviderType: "SAML",
