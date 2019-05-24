@@ -50,50 +50,50 @@ export class CdkStack extends cdk.Stack {
       }]
     });
 
-        // dynamodb table
-        const table = new dynamodb.Table(this, "Table", {
-          billingMode: BillingMode.PayPerRequest,
-          sseEnabled: true,
-          streamSpecification: StreamViewType.NewAndOldImages, // to enable global tables
-          partitionKey: {name: "key", type: dynamodb.AttributeType.String},
-          sortKey: {name: "range", type: dynamodb.AttributeType.Number},
+    // dynamodb table
+    const table = new dynamodb.Table(this, "Table", {
+      billingMode: BillingMode.PayPerRequest,
+      sseEnabled: true,
+      streamSpecification: StreamViewType.NewAndOldImages, // to enable global tables
+      partitionKey: {name: "key", type: dynamodb.AttributeType.String},
+      sortKey: {name: "range", type: dynamodb.AttributeType.Number},
 
-        });
+    });
 
-        // lambda function
-        const apiFunction = new lambda.Function(this, "Function", {
-          runtime: lambda.Runtime.NodeJS810,
-          handler: "index.handler",
-          code: lambda.Code.asset("../lambda/api/dist/packed"),
-          environment: {
-            TABLE_NAME: table.tableName,
-          },
-        });
+    // lambda function
+    const apiFunction = new lambda.Function(this, "Function", {
+      runtime: lambda.Runtime.NodeJS810,
+      handler: "index.handler",
+      code: lambda.Code.asset("../lambda/api/dist/packed"),
+      environment: {
+        TABLE_NAME: table.tableName,
+      },
+    });
 
-        // let the lambda have full access to the table
+    // let the lambda have full access to the table
 
-        table.grantFullAccess(apiFunction.role!);
+    table.grantFullAccess(apiFunction.role!);
 
-        // api
+    // api
 
-        let api = new apigateway.RestApi(this, id + "API");
-        let integration = new apigateway.LambdaIntegration(apiFunction, {
-          proxy: true
-        });
+    let api = new apigateway.RestApi(this, id + "API");
+    let integration = new apigateway.LambdaIntegration(apiFunction, {
+      proxy: true
+    });
 
-        let cfnAuthorizer = new apigateway.CfnAuthorizer(this, id, {
-          name: "CognitoAuthorizer",
-          type: AuthorizationType.Cognito,
-          identitySource: "method.request.header.Authorization",
-          restApiId: api.restApiId,
-          providerArns: [userPool.userPoolArn]
-        });
+    let cfnAuthorizer = new apigateway.CfnAuthorizer(this, id, {
+      name: "CognitoAuthorizer",
+      type: AuthorizationType.Cognito,
+      identitySource: "method.request.header.Authorization",
+      restApiId: api.restApiId,
+      providerArns: [userPool.userPoolArn]
+    });
 
 
-        api.root.addResource("{proxy+}").addMethod("ANY", integration, {
-          authorizerId: cfnAuthorizer.authorizerId,
-          authorizationType: AuthorizationType.Cognito
-        });
+    api.root.addResource("{proxy+}").addMethod("ANY", integration, {
+      authorizerId: cfnAuthorizer.authorizerId,
+      authorizationType: AuthorizationType.Cognito
+    });
 
     // Pre Token Generation function
 
