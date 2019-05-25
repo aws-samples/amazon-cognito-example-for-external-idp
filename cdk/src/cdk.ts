@@ -21,13 +21,16 @@ import cdk = require("@aws-cdk/cdk");
 import dynamodb = require("@aws-cdk/aws-dynamodb");
 import lambda = require("@aws-cdk/aws-lambda");
 import cognito = require("@aws-cdk/aws-cognito");
-import iam = require("@aws-cdk/aws-iam");
+
 import {BillingMode, StreamViewType} from "@aws-cdk/aws-dynamodb";
 
 import "source-map-support/register";
 import {AuthorizationType} from "@aws-cdk/aws-apigateway";
-import {CognitoCustomResourceConstruct} from "./customResourceConstructs/cognitoCustomResourceConstruct";
-import {PolicyStatementEffect} from "@aws-cdk/aws-iam";
+import {CognitoAppClientCustomResourceConstruct} from "./customResourceConstructs/cognitoAppClientCustomResourceConstruct";
+
+import {CfnUserPool} from "@aws-cdk/aws-cognito";
+import {CognitoDomainCustomResourceConstruct} from "./customResourceConstructs/cognitoDomainCustomResourceConstruct";
+import {CognitoPreTokenGenerationResourceConstruct} from "./customResourceConstructs/cognitoPreTokenGenerationResourceConstruct";
 
 export class CdkStack extends cdk.Stack {
 
@@ -36,11 +39,12 @@ export class CdkStack extends cdk.Stack {
 
     let groupsAttributeName = "ADGroups";
 
-    if (!process.env.COGNITO_DOMAIN_NAME) {
+    let domain = process.env.COGNITO_DOMAIN_NAME;
+    if (!domain) {
       throw new Error("COGNITO_DOMAIN_NAME environment variable must be defined");
     }
 
-    const userPool = new cognito.CfnUserPool(this, id + "Pool", {
+    const userPool: CfnUserPool = new cognito.CfnUserPool(this, id + "Pool", {
       usernameAttributes: ["email"],
       schema: [{
         name: groupsAttributeName,
@@ -62,7 +66,7 @@ export class CdkStack extends cdk.Stack {
     });
 
     // lambda function
-    const apiFunction = new lambda.Function(this, "Function", {
+    const apiFunction = new lambda.Function(this, "APIFunction", {
       runtime: lambda.Runtime.NodeJS810,
       handler: "index.handler",
       code: lambda.Code.asset("../lambda/api/dist/packed"),
@@ -97,7 +101,6 @@ export class CdkStack extends cdk.Stack {
       authorizerId: cfnAuthorizer.authorizerId,
       authorizationType: AuthorizationType.Cognito
     });
-
     // Pre Token Generation function
 
     // lambda function
@@ -111,66 +114,60 @@ export class CdkStack extends cdk.Stack {
       },
     });
 
-    const cognitoCustomResources = new CognitoCustomResourceConstruct(this, "CognitoCustomResources", {
-      UserPoolId: userPool.userPoolId,
-      PreTokenGenerationLambdaArn: preTokenGeneration.functionArn,
-      CreateUserPoolDomainRequest: {
-        Domain: process.env.COGNITO_DOMAIN_NAME
-      },
-      CreateUserPoolClientRequest: {
-        SupportedIdentityProviders: ["COGNITO"],
-        ClientName: "Web",
-        AllowedOAuthFlowsUserPoolClient: true,
-        AllowedOAuthFlows: ["code"],
-        AllowedOAuthScopes: ["phone", "email", "openid"],
-        GenerateSecret: false,
-        RefreshTokenValidity: 1,
-        CallbackURLs: ["http://localhost:3000/, http://localhost:3001/"],
-        LogoutURLs: ["http://localhost:3000/", "http://localhost:3001/"],
-      },
-      // CreateIdentityProviderRequest: {
-      //   ProviderType: "SAML",
-      //   ProviderName: "okta",
-      //   ProviderDetails: {
-      //     MetadataURL:""
-      //   },
-      //   AttributeMapping: {
-      //     "groups": groupsAttributeName
-      //   }
-      // }
+    const cognitoAppClient = new CognitoAppClientCustomResourceConstruct(this, "CognitoAppClient", {
+      SupportedIdentityProviders: ["COGNITO"],
+      ClientName: "Web",
+      AllowedOAuthFlowsUserPoolClient: true,
+      AllowedOAuthFlows: ["code"],
+      AllowedOAuthScopes: ["phone", "email", "openid"],
+      GenerateSecret: false,
+      RefreshTokenValidity: 1,
+      CallbackURLs: ["http://localhost:3000/"],
+      LogoutURLs: ["http://localhost:3000/"],
 
-    });
+    }, userPool);
 
-    cognitoCustomResources.node.addDependency(userPool);
+    const cognitoDomain = new CognitoDomainCustomResourceConstruct(this, "CognitoDomain", {
+      Domain: domain,
+    }, userPool);
 
-    let customResourceLambdaPolicy = new iam.PolicyStatement(PolicyStatementEffect.Allow);
-    customResourceLambdaPolicy.addAction("cognito-idp:*").addResource(userPool.userPoolArn);
-    customResourceLambdaPolicy.addAction("cognito-idp:DescribeUserPoolDomain").addResource("*");
-    cognitoCustomResources.lambda.addToRolePolicy(customResourceLambdaPolicy);
+    const cognitoPreTokenGen = new CognitoPreTokenGenerationResourceConstruct(this, "CognitoPreTokenGen", {
+      PreTokenGenerationLambdaArn: preTokenGeneration.functionArn
+    }, userPool);
+
+    //ProviderType: "SAML",
+    //   ProviderName: "okta",
+    //   ProviderDetails: {
+    //     MetadataURL:""
+    //   },
+    //   AttributeMapping: {
+    //     "groups": groupsAttributeName
+    //   }
 
     // Publish the custom resource output
     new cdk.CfnOutput(this, "APIUrl", {
       description: "API URL",
       value: api.url
     });
-    new cdk.CfnOutput(this, "UserPoolId", {
+
+    new cdk.CfnOutput(this, "UserPoolIdOutput", {
       description: "UserPool ID",
       value: userPool.userPoolId
     });
 
-    new cdk.CfnOutput(this, "AppClientId", {
+    new cdk.CfnOutput(this, "AppClientIdOutput", {
       description: "App Client ID",
-      value: cognitoCustomResources.response.AppClientId
+      value: cognitoAppClient.appClientId
     });
 
-    new cdk.CfnOutput(this, "Region", {
+    new cdk.CfnOutput(this, "RegionOutput", {
       description: "Region",
-      value: cognitoCustomResources.response.Region
+      value: cognitoDomain.region
     });
 
-    new cdk.CfnOutput(this, "CognitoDomain", {
+    new cdk.CfnOutput(this, "CognitoDomainOutput", {
       description: "Cognito Domain",
-      value: cognitoCustomResources.response.Domain
+      value: cognitoDomain.domain
     });
 
   }
@@ -179,6 +176,5 @@ export class CdkStack extends cdk.Stack {
 const app = new cdk.App();
 // tslint:disable-next-line:no-unused-expression
 new CdkStack(app, "ReInforce2019Demo");
-
 app.run();
 
