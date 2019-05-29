@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
 set -e
-export COGNITO_DOMAIN_NAME=reinforce2019
-
+source ./env.sh
 
 # ------------------
 # API

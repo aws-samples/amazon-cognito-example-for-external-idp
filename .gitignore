@@ -9,3 +9,4 @@
 **/coverage
 **/dist
 local-env.sh
+/sdkPlayground/
