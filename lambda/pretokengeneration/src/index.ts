@@ -35,22 +35,25 @@ export const handler = async (event: PreTokenGenerationEvent): Promise<PreTokenG
   const GROUPS_ATTRIBUTE_NAME = process.env.GROUPS_ATTRIBUTE_NAME || "custom:ADGroups";
   let ldapGroups = event.request.userAttributes[GROUPS_ATTRIBUTE_NAME];
 
-  if (!ldapGroups) {
-    ldapGroups = "";
-  }
-  if (ldapGroups.startsWith("[") && ldapGroups.endsWith("]")) {
+  // start with the existing Cognito groups
+  const ldapGroupsArr = [...event.request.groupConfiguration.groupsToOverride];
+  // no claims to supress yet
+  const claimsToSuppress = [];
+  if (ldapGroups && ldapGroups.startsWith("[") && ldapGroups.endsWith("]")) {
+    // this is how it is received from SAML
     // remove [ and ] chars. (we would use JSON.parse but the items in the list are not with quotes so it will fail)
     ldapGroups = ldapGroups.substring(1, ldapGroups.length - 1);
+    ldapGroupsArr.push(...ldapGroups.split(/\s*,\s*/));
+    // remove the attribute we used to map the groups into
+    claimsToSuppress.push(GROUPS_ATTRIBUTE_NAME);
   }
-  const ldapGroupsArr = ldapGroups.split(/\s*,\s*/);
 
   event.response = {
     "claimsOverrideDetails": {
-      "claimsToSuppress": [GROUPS_ATTRIBUTE_NAME], // remove the attribute claim from the token
+      "claimsToSuppress": claimsToSuppress,
       "groupOverrideDetails": {
-        // add the groups mentioned in the attribute to any actual groups the user is part of.
         // Will end up as a cognito:groups claim
-        "groupsToOverride": ldapGroupsArr.concat(event.request.groupConfiguration.groupsToOverride),
+        "groupsToOverride": ldapGroupsArr,
       },
     },
   };
