@@ -42,4 +42,106 @@ describe("lambda handler", () => {
 
   });
 
+  it("GET success - via attributes", async () => {
+
+    const result = await handler({
+      request: {
+        groupConfiguration:
+          {
+            groupsToOverride: [],
+            iamRolesToOverride: [],
+            preferredRole: [],
+          },
+        userAttributes: {
+          "custom:ADGroups": "[test1, test2]",
+        },
+      },
+      response: {},
+    });
+
+    console.log(result.response);
+
+    expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.contain("custom:ADGroups");
+    // tslint:disable-next-line:max-line-length
+    expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["test1", "test2"]);
+    // expect(result.response.claimsOverrideDetails!.claimsToAddOrOverride).to.be.undefined;
+
+  });
+
+  it("GET success - prior groups, empty attribute", async () => {
+
+    const result = await handler({
+      request: {
+        groupConfiguration:
+          {
+            groupsToOverride: ["test"],
+            iamRolesToOverride: [],
+            preferredRole: [],
+          },
+        userAttributes: {
+          "custom:ADGroups": "[]",
+        },
+      },
+      response: {},
+    });
+
+    console.log(result.response);
+
+    expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.contain("custom:ADGroups");
+    // tslint:disable-next-line:max-line-length
+    expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["test"]);
+    // expect(result.response.claimsOverrideDetails!.claimsToAddOrOverride).to.be.undefined;
+
+  });
+  it("GET success - mix", async () => {
+
+    const result = await handler({
+      request: {
+        groupConfiguration:
+          {
+            groupsToOverride: ["test"],
+            iamRolesToOverride: [],
+            preferredRole: [],
+          },
+        userAttributes: {
+          "custom:ADGroups": "[test2]",
+        },
+      },
+      response: {},
+    });
+
+    console.log(result.response);
+
+    expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.contain("custom:ADGroups");
+    // tslint:disable-next-line:max-line-length
+    expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["test", "test2"]);
+    // expect(result.response.claimsOverrideDetails!.claimsToAddOrOverride).to.be.undefined;
+
+  });
+
+  it("GET success - prior groups, no attribute", async () => {
+
+    const result = await handler({
+      request: {
+        groupConfiguration:
+          {
+            groupsToOverride: [ "test", "test2" ],
+            iamRolesToOverride: [],
+            preferredRole: [],
+          },
+        userAttributes: {
+        },
+      },
+      response: {},
+    });
+
+    console.log(result.response);
+
+    expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.be.empty;
+    // tslint:disable-next-line:max-line-length
+    expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["test", "test2"]);
+    // expect(result.response.claimsOverrideDetails!.claimsToAddOrOverride).to.be.undefined;
+
+  });
+
 });

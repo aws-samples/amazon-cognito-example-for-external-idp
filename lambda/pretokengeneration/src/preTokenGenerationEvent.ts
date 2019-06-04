@@ -1,4 +1,5 @@
 export interface PreTokenGenerationEvent {
+  triggerSource?: string;
   request: {
     userAttributes: { [key: string]: string },
     groupConfiguration: {

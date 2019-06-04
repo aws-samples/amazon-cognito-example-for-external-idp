@@ -43,17 +43,19 @@ export const handler = async (event: PreTokenGenerationEvent): Promise<PreTokenG
     // this is how it is received from SAML
     // remove [ and ] chars. (we would use JSON.parse but the items in the list are not with quotes so it will fail)
     ldapGroups = ldapGroups.substring(1, ldapGroups.length - 1);
-    ldapGroupsArr.push(...ldapGroups.split(/\s*,\s*/));
+    if (ldapGroups) {
+      ldapGroupsArr.push(...ldapGroups.split(/\s*,\s*/));
+    }
     // remove the attribute we used to map the groups into
     claimsToSuppress.push(GROUPS_ATTRIBUTE_NAME);
   }
 
   event.response = {
-    "claimsOverrideDetails": {
-      "claimsToSuppress": claimsToSuppress,
-      "groupOverrideDetails": {
+    claimsOverrideDetails: {
+      claimsToSuppress,
+      groupOverrideDetails: {
         // Will end up as a cognito:groups claim
-        "groupsToOverride": ldapGroupsArr,
+        groupsToOverride: ldapGroupsArr,
       },
     },
   };

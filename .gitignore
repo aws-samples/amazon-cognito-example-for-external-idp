@@ -10,3 +10,4 @@
 **/dist
 local-env.sh
 /sdkPlayground/
+!/lambda/api/src/types/aws-serverless-express/index.d.ts

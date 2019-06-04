@@ -1,18 +1,14 @@
 import express = require("express");
-import {Express, Request, Response, json, urlencoded} from "express";
-
-// import * as compression from "compression";
+import {Express, json, Request, Response, urlencoded} from "express";
 import cors from "cors";
 import {eventContext} from "aws-serverless-express/middleware";
-import {join} from "path";
-import {Pet} from "./model/pet";
+
 import uuid4 from "uuid/v4";
+import {Pet} from "./model/pet";
+import {amazonCognitoGroups} from "./services/amazonCognitoGroupsMiddleware";
 
 export const app: Express = express();
 
-app.set("view engine", "pug");
-app.set("views", join(__dirname, "/views"));
-// app.use(compression());
 app.use(cors({
   credentials: false,
   origin: ["http://localhost:3000"],
@@ -20,6 +16,7 @@ app.use(cors({
 app.use(json());
 app.use(urlencoded({extended: true}));
 app.use(eventContext());
+app.use(amazonCognitoGroups());
 
 const pets: Pet[] = [
   {
@@ -43,6 +40,10 @@ const pets: Pet[] = [
  * List all pets
  */
 app.get("/pets", (req: Request, res: Response) => {
+
+  if (req.groups.has("test")) {
+    res.json([...pets, {id: "special", type: "secret", price: 1000}]);
+  }
   res.json(pets);
 });
 

@@ -4,8 +4,8 @@
 export class Pet {
 
   constructor(
-    public id: string,
-    public type: string,
-    public price: number) {
+    public id?: string | null,
+    public type?: string | null,
+    public price?: number | null) {
   }
 }

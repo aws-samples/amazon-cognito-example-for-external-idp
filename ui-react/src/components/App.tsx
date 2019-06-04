@@ -71,16 +71,35 @@ class App extends Component<any, State> {
     }
   }
 
+  claims(user: CognitoUser): { [id: string]: any; } {
+    if (user && user.getSignInUserSession() && user.getSignInUserSession().isValid()) {
+      return user.getSignInUserSession().getIdToken().decodePayload();
+    }
+    return {};
+  }
+
+  groups(claims: { [id: string]: any; }): string[] {
+    if(claims && claims["cognito:groups"]) {
+      return claims["cognito:groups"];
+    }
+    return [];
+  }
 
   render() {
 
     const {authState, pets, user, error, selectedPet, message}: Readonly<State> = this.state;
+    let claims = this.claims(user);
+
     let username = null;
-    if (user && user.getSignInUserSession() && user.getSignInUserSession().isValid()) {
-      username = user.getSignInUserSession().getIdToken().decodePayload()["email"];
+    let groups: string[] = [];
+    if (claims.email) {
+
+      username = claims.email;
       if (!username) {
         username = user.getUsername();
       }
+      groups = Array.from(this.groups(claims));
+
     }
 
     return (
@@ -105,6 +124,7 @@ class App extends Component<any, State> {
               <button className="btn btn-primary" onClick={() => Auth.federatedSignIn()}>Sign In / Sign Up</button>}
               {authState === 'signedIn' && <div>
                 <span className="badge badge-info">{username}</span> &nbsp;
+                {[...groups].map(group=><span key={group} className="badge badge-success mr-2">{group}</span> ) }
                 <button className="btn btn-warning" onClick={() => this.signOut()}>Sign out</button>
 
               </div>}
@@ -185,17 +205,19 @@ class App extends Component<any, State> {
 
   }
 
+  async request<T>(url: string, method: string): Promise<T> {
+    // check the current user when the App component is loaded
+    let session = await Auth.currentSession();
+    let result = await fetch(API_URL + url, {
+      method: method,
+      headers: {"Authorization": session.getIdToken().getJwtToken()}
+    });
+    return await result.json();
+  }
+
   async getAllPets() {
     try {
-      // check the current user when the App component is loaded
-      let session = await Auth.currentSession();
-      let result = await fetch(API_URL + "/pets", {
-        method: "GET",
-        headers: {"Authorization": session.getIdToken().getJwtToken()}
-      });
-
-      let pets = JSON.parse(atob(await result.text()));
-
+      let pets: Pet[] = await this.request("/pets", "GET");
       this.setState({pets});
     } catch (e) {
       console.error(e);

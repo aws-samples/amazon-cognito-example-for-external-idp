@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "ts-node src/local.ts",
     "build": "tsc && webpack",
     "watch": "tsc -w",
     "test": "mocha -r ts-node/register tests/**/*.test.ts",

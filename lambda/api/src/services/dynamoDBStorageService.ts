@@ -18,8 +18,8 @@
 import AWS = require("aws-sdk");
 import {DocumentClient} from "aws-sdk/lib/dynamodb/document_client";
 import {StorageService} from "./storageService";
-import {Pet} from "../model/pet";
 import {ScanInput} from "aws-sdk/clients/dynamodb";
+import {Pet} from "../model/pet";
 
 export class DynamoDBStorageService implements StorageService {
 

@@ -86,14 +86,17 @@ export class CdkStack extends cdk.Stack {
       proxy: true
     });
 
+    let tokenHeaderName = "Authorization";
+
     let cfnAuthorizer = new apigateway.CfnAuthorizer(this, id, {
       name: "CognitoAuthorizer",
       type: AuthorizationType.Cognito,
-      identitySource: "method.request.header.Authorization",
+      identitySource: "method.request.header." + tokenHeaderName,
       restApiId: api.restApiId,
       providerArns: [userPool.userPoolArn]
     });
 
+    // capture all requests - require authorization
 
     let proxyResource = api.root.addResource("{proxy+}");
     proxyResource.addMethod("OPTIONS", integration);
@@ -101,6 +104,12 @@ export class CdkStack extends cdk.Stack {
       authorizerId: cfnAuthorizer.authorizerId,
       authorizationType: AuthorizationType.Cognito
     });
+
+    // root (/) - no authorization required
+
+    api.root.addMethod("OPTIONS", integration);
+    api.root.addMethod("ANY", integration);
+
     // Pre Token Generation function
 
     // lambda function
@@ -108,7 +117,7 @@ export class CdkStack extends cdk.Stack {
     const preTokenGeneration = new lambda.Function(this, "PreTokenGeneration", {
       runtime: lambda.Runtime.NodeJS810,
       handler: "index.handler",
-      code: lambda.Code.asset("../lambda/pretokengeneration/dist/packed"),
+      code: lambda.Code.asset("../lambda/pretokengeneration/dist/src"),
       environment: {
         GROUPS_ATTRIBUTE_NAME: groupsAttributeName,
       },
