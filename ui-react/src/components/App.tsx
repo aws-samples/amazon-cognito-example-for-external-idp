@@ -5,6 +5,7 @@ import Amplify, {Auth, Hub} from 'aws-amplify';
 import {CognitoUser} from '@aws-amplify/auth';
 import {API_URL, AUTH_OPTS} from "../config";
 import {Pet} from "../model/pet";
+import {getClaims, getGroups} from "../amazonCognitoHelpers";
 
 Amplify.configure({Auth: AUTH_OPTS});
 
@@ -71,24 +72,10 @@ class App extends Component<any, State> {
     }
   }
 
-  claims(user: CognitoUser): { [id: string]: any; } {
-    if (user && user.getSignInUserSession() && user.getSignInUserSession().isValid()) {
-      return user.getSignInUserSession().getIdToken().decodePayload();
-    }
-    return {};
-  }
-
-  groups(claims: { [id: string]: any; }): string[] {
-    if(claims && claims["cognito:groups"]) {
-      return claims["cognito:groups"];
-    }
-    return [];
-  }
-
   render() {
 
     const {authState, pets, user, error, selectedPet, message}: Readonly<State> = this.state;
-    let claims = this.claims(user);
+    let claims = getClaims(user);
 
     let username = null;
     let groups: string[] = [];
@@ -98,7 +85,7 @@ class App extends Component<any, State> {
       if (!username) {
         username = user.getUsername();
       }
-      groups = Array.from(this.groups(claims));
+      groups = getGroups(claims);
 
     }
 
@@ -124,7 +111,7 @@ class App extends Component<any, State> {
               <button className="btn btn-primary" onClick={() => Auth.federatedSignIn()}>Sign In / Sign Up</button>}
               {authState === 'signedIn' && <div>
                 <span className="badge badge-info">{username}</span> &nbsp;
-                {[...groups].map(group=><span key={group} className="badge badge-success mr-2">{group}</span> ) }
+                {[...groups].map(group => <span key={group} className="badge badge-success mr-2">{group}</span>)}
                 <button className="btn btn-warning" onClick={() => this.signOut()}>Sign out</button>
 
               </div>}
