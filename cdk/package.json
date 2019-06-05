@@ -2,7 +2,7 @@
   "name": "cognito-backend-refresh-token-infra",
   "version": "0.1.0",
   "bin": {
-    "cdk": "bin/cdk.js"
+    "cdk": "dist/cdk.js"
   },
   "scripts": {
     "build": "tsc",

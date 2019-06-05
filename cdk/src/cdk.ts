@@ -184,6 +184,9 @@ export class CdkStack extends cdk.Stack {
 
 const app = new cdk.App();
 // tslint:disable-next-line:no-unused-expression
-new CdkStack(app, "ReInforce2019Demo");
-app.run();
+let cdkStack = new CdkStack(app, "ReInforce2019Demo");
 
+//TODO: how to extract stack info so we can auto configure the frontend
+// just the equivalent of aws cloudformation describe-stacks --stack-name ReInforce2019Demo
+
+app.run();

@@ -61,6 +61,8 @@ export function amazonCognitoGroups(): RequestHandler {
       if (groups) {
         req.groups = groups;
       }
+    } else {
+      req.groups = new Set();
     }
     next();
   };

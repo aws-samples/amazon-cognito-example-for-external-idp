@@ -53,5 +53,5 @@ export const AUTH_OPTS: AuthOptions = {
   authenticationFlowType: 'USER_PASSWORD_AUTH'*/
 };
 
-export const API_URL = "https://svtd9m4652.execute-api.us-west-2.amazonaws.com/prod";
-//export const API_URL = "http://localhost:3001";
+//export const API_URL = "https://svtd9m4652.execute-api.us-west-2.amazonaws.com/prod";
+export const API_URL = "http://localhost:3001";

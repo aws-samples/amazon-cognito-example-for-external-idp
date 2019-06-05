@@ -15,6 +15,7 @@ app.use(cors({
 }));
 app.use(json());
 app.use(urlencoded({extended: true}));
+
 app.use(eventContext());
 app.use(amazonCognitoGroups());
 
@@ -41,9 +42,9 @@ const pets: Pet[] = [
  */
 app.get("/pets", (req: Request, res: Response) => {
 
-  if (req.groups.has("test")) {
-    res.json([...pets, {id: "special", type: "secret", price: 1000}]);
-  }
+  // if (req.groups.has("test")) {
+  //   res.json([...pets, {id: "special", type: "secret", price: 1000}]);
+  // }
   res.json(pets);
 });
 
@@ -64,7 +65,12 @@ app.get("/pets/:petId", (req: Request, res: Response) => {
  * Create a pet
  */
 app.post("/pets", (req: Request, res: Response) => {
+
   const pet: Pet = req.body;
+
+  // TODO: make sure body is parsed as JSON, post and put stopped working
+  console.log("post /pets ", typeof pet, pet);
+
   if (pet.id) {
     res.status(400).send("Create pet auto assigns an ID, to update use PUT");
     return;
@@ -97,7 +103,7 @@ app.put("/pets/:petId", (req: Request, res: Response) => {
 
   Object.assign(existingPet, updatedPet);
 
-  res.json(existingPet);
+  res.json(updatedPet);
 });
 
 /**

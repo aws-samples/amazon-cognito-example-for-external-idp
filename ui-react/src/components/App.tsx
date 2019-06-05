@@ -3,11 +3,23 @@ import React, {ChangeEvent, Component, FormEvent} from 'react';
 import './App.css';
 import Amplify, {Auth, Hub} from 'aws-amplify';
 import {CognitoUser} from '@aws-amplify/auth';
-import {API_URL, AUTH_OPTS} from "../config";
+import {AUTH_OPTS} from "../config";
 import {Pet} from "../model/pet";
 import {getClaims, getGroups} from "../amazonCognitoHelpers";
+import {PetService} from "../service/petService";
 
 Amplify.configure({Auth: AUTH_OPTS});
+
+const numberFormat = new Intl.NumberFormat(undefined, {
+  style: 'currency',
+  currency: 'USD',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0
+});
+
+interface AppProps {
+  petService: PetService
+}
 
 interface State {
   authState?: 'signedIn' | 'signIn' | 'loading';
@@ -18,19 +30,15 @@ interface State {
   selectedPet?: Pet;
 }
 
-const numberFormat = new Intl.NumberFormat(undefined, {
-  style: 'currency',
-  currency: 'USD',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0
-});
+class App extends Component<AppProps, State> {
 
+  private petService: PetService;
 
-class App extends Component<any, State> {
+  constructor(props: AppProps) {
 
-
-  constructor(props: any) {
     super(props);
+
+    this.petService = props.petService;
 
     this.state = {
       authState: 'loading',
@@ -192,22 +200,11 @@ class App extends Component<any, State> {
 
   }
 
-  async request<T>(url: string, method: string): Promise<T> {
-    // check the current user when the App component is loaded
-    let session = await Auth.currentSession();
-    let result = await fetch(API_URL + url, {
-      method: method,
-      headers: {"Authorization": session.getIdToken().getJwtToken()}
-    });
-    return await result.json();
-  }
-
   async getAllPets() {
     try {
-      let pets: Pet[] = await this.request("/pets", "GET");
+      let pets: Pet[] = await this.petService.getAllPets();
       this.setState({pets});
     } catch (e) {
-      console.error(e);
       this.setState({error: "Failed to load pets"});
     }
   }
@@ -222,42 +219,11 @@ class App extends Component<any, State> {
       this.setState({error: "Pet is needed"});
       return;
     }
-    let result: Response;
     try {
-      let session = await Auth.currentSession();
-
-      let petId = pet.id;
-      if (petId) {
-
-        result = await fetch(`${API_URL}/pets/${petId}`, {
-          body: JSON.stringify(pet),
-          method: "PUT",
-          headers: {
-            "Authorization": session.getIdToken().getJwtToken(),
-            "Content-Type": "application/json"
-          }
-        });
-      } else {
-        result = await fetch(`${API_URL}/pets`, {
-          body: JSON.stringify(pet),
-          method: "POST",
-          headers: {
-            "Authorization": session.getIdToken().getJwtToken(),
-            "Content-Type": "application/json"
-          }
-        });
-      }
-      if (!result.ok) {
-        let errorText = await result.text();
-        this.setState({error: result.status + " " + errorText});
-      } else {
-        this.showMessage("");
-        this.setState({message: (petId ? "Updated" : "Saved") + " successfully"});
-      }
+      await this.petService.savePet(pet);
       return this.getAllPets();
     } catch (e) {
-      console.error(e);
-      this.setState({error: "Failed to save pets"});
+      this.setState({error: "Failed to save pet. " + e.message});
     }
   }
 
@@ -269,16 +235,6 @@ class App extends Component<any, State> {
       console.log(e);
     }
   }
-
-  private showMessage(s: string) {
-    setTimeout(() => {
-      this.setState({
-        message: null
-      });
-    }, 3000);
-  }
 }
 
 export default App;
-
-// OAuthButton.js
