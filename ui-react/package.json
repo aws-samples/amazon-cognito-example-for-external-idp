@@ -1,7 +1,8 @@
 {
-  "name": "react-amplify-demo",
+  "name": "amazon-cognito-example-for-external-idp-ui-react",
   "version": "0.1.0",
-  "private": true,
+  "author": "Eran Medan",
+  "license": "MIT-0",
   "dependencies": {
     "@types/jest": "^24.0.12",
     "@types/node": "^11.13.8",

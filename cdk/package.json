@@ -1,6 +1,8 @@
 {
-  "name": "cognito-backend-refresh-token-infra",
+  "name": "amazon-cognito-example-for-external-idp-cdk",
   "version": "0.1.0",
+  "author": "Eran Medan",
+  "license": "MIT-0",
   "bin": {
     "cdk": "dist/cdk.js"
   },

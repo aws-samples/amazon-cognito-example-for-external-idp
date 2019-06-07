@@ -1,6 +1,8 @@
 {
-  "name": "cognito-backend-refresh-token-lambda",
-  "version": "1.0.0",
+  "name": "amazon-cognito-example-for-external-idp-lambda-api",
+  "version": "0.1.0",
+  "author": "Eran Medan",
+  "license": "MIT-0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -11,8 +13,6 @@
     "testWithCoverage": "nyc -r lcov -e .ts -x \"*.test.ts\" mocha -r ts-node/register tests/**/*.test.ts && nyc report"
   },
   "keywords": [],
-  "author": "",
-  "license": "",
   "devDependencies": {
     "@types/aws-lambda": "^8.10.19",
     "@types/aws-serverless-express": "^3.3.1",

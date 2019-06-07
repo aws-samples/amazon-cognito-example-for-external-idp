@@ -2,14 +2,21 @@
 
 ## Overview
 
-This code example contains all that is needed in order to create a serverless web application with 
-Amazon Cognito, Amazon API Gateway and AWS Lambda.
+
+This example can be used as a starting point for using Amazon Cognito together with an external IdP 
+(e.g. a SAML 2.0 based provider or a social login provider). 
+It shows how to use triggers in order to map IdP attributes 
+(e.g. LDAP group membership passed on the SAML response as an attribute) 
+to Amazon Cognito User Pools Groups and optionally also to IAM roles. 
+
+
+It contains all that is needed in order to create a serverless web application with 
+Amazon Cognito, Amazon API Gateway and AWS Lambda (with optionally an external IdP).
 
 It addresses fine grained role based access control and demonstrates how to associate users to roles/groups based 
 on mapped attributes from an external IdP or social login provider. 
 
-It is using entirely TypeScript for frontend, backend and even the infrastructure. (Using [AWS CDK](https://github.com/awslabs/aws-cdk))
-
+It is using TypeScript for frontend, backend and even the infrastructure. (Using [AWS CDK](https://github.com/awslabs/aws-cdk))
  
 ## Modules
 
@@ -97,5 +104,8 @@ AWS Amplify can manage all aspects of a project, but since we used AWS CDK, we f
   This is not used for enforcing authorization, this is done only in the backend (via [Amazon Cognito User Pools Authorizer](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-integrate-with-cognito.html)).
   However it provides a nicer user experience where actions that the user will not be permitted to perform are not visible / grayed out for them.
   
-  
+
  
+## License Summary
+
+This sample code is made available under the [MIT-0 license](https://github.com/aws/mit-0). See the LICENSE file.
