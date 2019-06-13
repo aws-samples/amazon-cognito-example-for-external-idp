@@ -3,7 +3,7 @@ import lambda = require("@aws-cdk/aws-lambda");
 import cdk = require("@aws-cdk/cdk");
 import iam = require("@aws-cdk/aws-iam");
 import {Code, Function, FunctionBase} from "@aws-cdk/aws-lambda";
-import {PolicyStatementEffect} from "@aws-cdk/aws-iam";
+import {PolicyStatementEffect, ServicePrincipal} from "@aws-cdk/aws-iam";
 import {CfnUserPool} from "@aws-cdk/aws-cognito";
 import {CognitoPreTokenGenerationParams} from "../customResourceLambdas/cognitoPreTokenGenerationCustomResourceHandler";
 
@@ -16,6 +16,12 @@ export class CognitoPreTokenGenerationResourceConstruct extends cdk.Construct {
 
     this.node.addDependency(userPool);
     this.node.addDependency(preTokenLambda);
+
+    preTokenLambda.addPermission("permission", {
+      principal : new ServicePrincipal("cognito-idp.amazonaws.com"),
+      action: "lambda:InvokeFunction",
+      sourceArn: userPool.userPoolArn
+    });
 
     this.lambda = new lambda.SingletonFunction(this, "CognitoPreTokenGenerationCustomResource", {
       uuid: "94418158-75C4-4A49-A10D-38F8096AEE52",
@@ -31,13 +37,15 @@ export class CognitoPreTokenGenerationResourceConstruct extends cdk.Construct {
     customResourceLambdaPolicy
       .addActions("cognito-idp:DescribeUserPool", "cognito-idp:UpdateUserPool")
       .addResource(userPool.userPoolArn);
+
     this.lambda.addToRolePolicy(customResourceLambdaPolicy);
 
     const props: CognitoPreTokenGenerationParams = {
       PreTokenGenerationLambdaArn: preTokenLambda.functionArn,
       UserPoolId: userPool.userPoolId
     };
-    const resource = new cfn.CustomResource(this, "CognitoPreTokenGeneration", {
+
+    new cfn.CustomResource(this, "CognitoPreTokenGeneration", {
       provider: cfn.CustomResourceProvider.lambda(this.lambda),
       properties: {
         Props: props

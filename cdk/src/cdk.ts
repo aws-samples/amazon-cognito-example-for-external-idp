@@ -178,9 +178,7 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
       },
     });
 
-    const preTokenGenConstruct = new CognitoPreTokenGenerationResourceConstruct(this, "CognitoPreTokenGen", userPool, preTokenGeneration);
-
-    //preTokenGenConstruct.node.addDependency(preTokenGeneration);
+    new CognitoPreTokenGenerationResourceConstruct(this, "CognitoPreTokenGen", userPool, preTokenGeneration);
 
     // ========================================================================
     // Resource: Identity Provider Settings
