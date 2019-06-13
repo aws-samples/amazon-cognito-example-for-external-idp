@@ -72,6 +72,14 @@ export const handler = (new class extends CustomResourceHandler {
     delete userPool.CustomDomain;
     delete userPool.Arn;
 
+    // fix for: Please use TemporaryPasswordValidityDays instead of UnusedAccountValidityDays
+    if(userPool.Policies && userPool.Policies.PasswordPolicy) {
+      const tempPasswordValidityDays = (userPool.Policies.PasswordPolicy as any)["UnusedAccountValidityDays"];
+      if(tempPasswordValidityDays) {
+        userPool.Policies.PasswordPolicy["TemporaryPasswordValidityDays"] = tempPasswordValidityDays;
+      }
+    }
+
     let updateRequest: UpdateUserPoolRequest = {
       UserPoolId: userPoolId,
       ...userPool,
