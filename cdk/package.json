@@ -9,21 +9,23 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
-    "cdk": "cdk"
+    "cdk": "cdk",
+    "generate-config": "ts-node src/generateConfig.ts"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.26",
-    "@types/node": "^12.0.2",
-    "aws-cdk": "^0.31.0",
-    "typescript": "^3.4.5"
+    "@types/aws-lambda": "^8.10.27",
+    "@types/node": "^12.0.8",
+    "aws-cdk": "^0.34.0",
+    "typescript": "^3.5.1"
   },
   "dependencies": {
-    "@aws-cdk/aws-apigateway": "^0.31.0",
-    "@aws-cdk/aws-cognito": "^0.31.0",
-    "@aws-cdk/aws-dynamodb": "^0.31.0",
-    "@aws-cdk/aws-lambda": "^0.31.0",
-    "@aws-cdk/aws-serverless": "^0.28.0",
-    "@aws-cdk/cdk": "^0.31.0",
+    "aws-sdk": "^2.474.0",
+    "@aws-cdk/aws-apigateway": "^0.34.0",
+    "@aws-cdk/aws-cognito": "^0.34.0",
+    "@aws-cdk/aws-dynamodb": "^0.34.0",
+    "@aws-cdk/aws-lambda": "^0.34.0",
+    "@aws-cdk/aws-sam": "^0.34.0",
+    "@aws-cdk/cdk": "^0.34.0",
     "source-map-support": "^0.5.12"
   }
 }

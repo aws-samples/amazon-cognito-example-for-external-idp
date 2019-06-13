@@ -28,7 +28,9 @@ export class CognitoPreTokenGenerationResourceConstruct extends cdk.Construct {
 
     //TODO: narrow down permissions and add a convenient method
     let customResourceLambdaPolicy = new iam.PolicyStatement(PolicyStatementEffect.Allow);
-    customResourceLambdaPolicy.addAction("cognito-idp:*").addResource(userPool.userPoolArn);
+    customResourceLambdaPolicy
+      .addActions("cognito-idp:DescribeUserPool", "cognito-idp:UpdateUserPool")
+      .addResource(userPool.userPoolArn);
     this.lambda.addToRolePolicy(customResourceLambdaPolicy);
 
     const resource = new cfn.CustomResource(this, "CognitoPreTokenGeneration", {

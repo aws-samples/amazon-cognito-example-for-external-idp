@@ -7,18 +7,7 @@ import {
 } from "aws-lambda";
 
 import * as aws from "aws-sdk";
-import {
-  CreateIdentityProviderRequest,
-  CreateUserPoolClientRequest,
-  CreateUserPoolDomainRequest,
-  Types as CognitoTypes,
-  UpdateUserPoolDomainRequest
-} from "aws-sdk/clients/cognitoidentityserviceprovider";
-import {CognitoAppClientCustomResourceParams} from "./cognitoAppClientCustomResourceHandler";
-
-// //see bottom of https://www.typescriptlang.org/docs/handbook/advanced-types.html
-export type CognitoDomainCustomResourceParams = CreateUserPoolDomainRequest
-
+import {CreateUserPoolDomainRequest, UpdateUserPoolDomainRequest} from "aws-sdk/clients/cognitoidentityserviceprovider";
 
 const cognitoIdP = new aws.CognitoIdentityServiceProvider();
 const region = aws.config.region!;
@@ -28,12 +17,12 @@ export const handler = (new class extends CustomResourceHandler {
   // noinspection JSUnusedGlobalSymbols,JSUnusedLocalSymbols
   async onCreate(event: CloudFormationCustomResourceCreateEvent, _context: Context): Promise<ResponseData> {
 
-    const createDomainRequest: CognitoDomainCustomResourceParams = event.ResourceProperties.Props;
+    const createDomainRequest: CreateUserPoolDomainRequest = event.ResourceProperties.Props;
 
     return await this.create(createDomainRequest);
   }
 
-  private async create(createDomainRequest: CognitoDomainCustomResourceParams) {
+  private async create(createDomainRequest: CreateUserPoolDomainRequest) {
     const userPoolId = createDomainRequest.UserPoolId;
 
     await cognitoIdP.createUserPoolDomain(createDomainRequest).promise();
@@ -66,7 +55,7 @@ export const handler = (new class extends CustomResourceHandler {
   // noinspection JSUnusedGlobalSymbols,JSUnusedLocalSymbols
   async onDelete(event: CloudFormationCustomResourceDeleteEvent, _context: Context): Promise<ResponseData> {
 
-    const createDomainRequest: CognitoDomainCustomResourceParams = event.ResourceProperties.Props;
+    const createDomainRequest: CreateUserPoolDomainRequest = event.ResourceProperties.Props;
 
     const userPoolId = createDomainRequest.UserPoolId;
 
@@ -97,12 +86,13 @@ export const handler = (new class extends CustomResourceHandler {
 // noinspection JSUnusedGlobalSymbols,JSUnusedLocalSymbols
   async onUpdate(event: CloudFormationCustomResourceUpdateEvent, _context: Context): Promise<ResponseData> {
     //TODO: if domain changed, create, else update
-    const createDomainRequest: CognitoDomainCustomResourceParams = event.ResourceProperties.Props;
-    const oldCreateDomainRequest: CognitoDomainCustomResourceParams = event.OldResourceProperties.Props;
+    const createDomainRequest: CreateUserPoolDomainRequest = event.ResourceProperties.Props;
+    const oldCreateDomainRequest: CreateUserPoolDomainRequest = event.OldResourceProperties.Props;
 
     const userPoolId = createDomainRequest.UserPoolId;
 
-    if (createDomainRequest.Domain !== oldCreateDomainRequest.Domain) {
+    if (createDomainRequest.Domain !== oldCreateDomainRequest.Domain ||
+      createDomainRequest.UserPoolId !== oldCreateDomainRequest.UserPoolId) {
       // we need to create a new app client and return a new resource ID as it's not possible to change the above
       // CloudFormation will handle deleting the old resource (this is basically a replace)
       return this.create(createDomainRequest);
@@ -116,7 +106,7 @@ export const handler = (new class extends CustomResourceHandler {
 
   }
 
-  private generateReturn(createDomainRequest: CognitoDomainCustomResourceParams, userPoolId: string) {
+  private generateReturn(createDomainRequest: CreateUserPoolDomainRequest, userPoolId: string) {
     return {
       returnValue: {
         Domain: `${createDomainRequest.Domain}.auth.${region}.amazoncognito.com`,
@@ -126,7 +116,7 @@ export const handler = (new class extends CustomResourceHandler {
     };
   }
 
-  private async waitForDomainToBeActive(createDomainRequest: CognitoDomainCustomResourceParams) {
+  private async waitForDomainToBeActive(createDomainRequest: CreateUserPoolDomainRequest) {
     await new Promise<void>((resolve: any, reject: any) => {
       const x = setInterval(async () => {
         try {

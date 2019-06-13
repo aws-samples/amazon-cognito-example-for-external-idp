@@ -43,3 +43,4 @@ pushd ./cdk/
 
 echo "building..."
 npm run build
+

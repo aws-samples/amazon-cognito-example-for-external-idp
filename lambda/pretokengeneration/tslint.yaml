@@ -10,3 +10,5 @@ rules:
   no-empty: false
   object-literal-key-quotes: false
   jsdoc-format: false
+  trailing-comma: false
+  arrow-parens: false

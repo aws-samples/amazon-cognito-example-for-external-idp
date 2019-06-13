@@ -104,17 +104,17 @@ describe("lambda handler", () => {
             preferredRole: [],
           },
         userAttributes: {
-          "custom:ADGroups": "[test2]",
+          "custom:ADGroups": "[DemoAppAdmins, DemoAppUsers]",
         },
       },
       response: {},
     });
 
-    console.log(result.response);
+    console.log(JSON.stringify(result.response, null, 2));
 
     expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.contain("custom:ADGroups");
     // tslint:disable-next-line:max-line-length
-    expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["test", "test2"]);
+    expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["test", "DemoAppAdmins", "DemoAppUsers"]);
     // expect(result.response.claimsOverrideDetails!.claimsToAddOrOverride).to.be.undefined;
 
   });
@@ -125,12 +125,11 @@ describe("lambda handler", () => {
       request: {
         groupConfiguration:
           {
-            groupsToOverride: [ "test", "test2" ],
+            groupsToOverride: ["test", "test2"],
             iamRolesToOverride: [],
             preferredRole: [],
           },
-        userAttributes: {
-        },
+        userAttributes: {},
       },
       response: {},
     });
@@ -141,6 +140,30 @@ describe("lambda handler", () => {
     // tslint:disable-next-line:max-line-length
     expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["test", "test2"]);
     // expect(result.response.claimsOverrideDetails!.claimsToAddOrOverride).to.be.undefined;
+
+  });
+  it("GET success - remove idp auto generated groups", async () => {
+
+    const result = await handler({
+      "userPoolId": "us-west-2_abc",
+      "request": {
+        "userAttributes": {
+          "cognito:user_status": "EXTERNAL_PROVIDER",
+          "custom:ADGroups": "[DemoAppAdmins, DemoAppUsers]"
+        },
+        "groupConfiguration": {
+          "groupsToOverride": ["us-west-2_abc"],
+          "iamRolesToOverride": [],
+          "preferredRole": null
+        }
+      },
+      "response": {"claimsOverrideDetails": null}
+    });
+
+    console.log(JSON.stringify(result.response, null, 2));
+
+    // tslint:disable-next-line:max-line-length
+    expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["DemoAppAdmins", "DemoAppUsers"]);
 
   });
 

@@ -4,14 +4,14 @@
   "author": "Eran Medan",
   "license": "MIT-0",
   "dependencies": {
-    "@types/jest": "^24.0.12",
-    "@types/node": "^11.13.8",
-    "aws-amplify": "^1.1.26",
-    "aws-amplify-react": "^2.3.6",
+    "@types/jest": "^24.0.13",
+    "@types/node": "^12.0.8",
+    "aws-amplify": "^1.1.28",
+    "aws-amplify-react": "^2.3.8",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
-    "react-scripts": "2.1.8",
-    "typescript": "^3.4.5"
+    "react-scripts": "^3.0.1",
+    "typescript": "^3.5.1"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -29,7 +29,7 @@
     "not op_mini all"
   ],
   "devDependencies": {
-    "@types/react": "^16.8.15",
+    "@types/react": "^16.8.19",
     "@types/react-dom": "^16.8.4"
   }
 }

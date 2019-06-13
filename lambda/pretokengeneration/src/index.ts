@@ -33,10 +33,11 @@ import {PreTokenGenerationEvent} from "./preTokenGenerationEvent";
 export const handler = async (event: PreTokenGenerationEvent): Promise<PreTokenGenerationEvent> => {
 
   const GROUPS_ATTRIBUTE_NAME = process.env.GROUPS_ATTRIBUTE_NAME || "custom:ADGroups";
+
   let ldapGroups = event.request.userAttributes[GROUPS_ATTRIBUTE_NAME];
 
   // start with the existing Cognito groups
-  const ldapGroupsArr = [...event.request.groupConfiguration.groupsToOverride];
+  let ldapGroupsArr = [...event.request.groupConfiguration.groupsToOverride];
   // no claims to supress yet
   const claimsToSuppress = [];
   if (ldapGroups && ldapGroups.startsWith("[") && ldapGroups.endsWith("]")) {
@@ -49,6 +50,10 @@ export const handler = async (event: PreTokenGenerationEvent): Promise<PreTokenG
     // remove the attribute we used to map the groups into
     claimsToSuppress.push(GROUPS_ATTRIBUTE_NAME);
   }
+
+  // suppress auto generated IdP-based group (optional)
+
+  ldapGroupsArr = ldapGroupsArr.filter(group => !group.startsWith(event.userPoolId!));
 
   event.response = {
     claimsOverrideDetails: {

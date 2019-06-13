@@ -21,7 +21,6 @@ import cdk = require("@aws-cdk/cdk");
 import dynamodb = require("@aws-cdk/aws-dynamodb");
 import lambda = require("@aws-cdk/aws-lambda");
 import cognito = require("@aws-cdk/aws-cognito");
-
 import {BillingMode, StreamViewType} from "@aws-cdk/aws-dynamodb";
 
 import "source-map-support/register";
@@ -31,18 +30,26 @@ import {CognitoAppClientCustomResourceConstruct} from "./customResourceConstruct
 import {CfnUserPool} from "@aws-cdk/aws-cognito";
 import {CognitoDomainCustomResourceConstruct} from "./customResourceConstructs/cognitoDomainCustomResourceConstruct";
 import {CognitoPreTokenGenerationResourceConstruct} from "./customResourceConstructs/cognitoPreTokenGenerationResourceConstruct";
+import {CognitoIdPCustomResourceConstruct} from "./customResourceConstructs/cognitoIdPCustomResourceConstruct";
+import {AttributeMappingType} from "aws-sdk/clients/cognitoidentityserviceprovider";
+
+
+import {Utils} from "./utils";
+import {Runtime} from "@aws-cdk/aws-lambda";
 
 export class CdkStack extends cdk.Stack {
 
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    let groupsAttributeName = "ADGroups";
+    const domain = Utils.requireFromEnv("COGNITO_DOMAIN_NAME");
+    const groupsAttributeName = Utils.requireFromEnv("GROUPS_ATTRIBUTE_NAME");
+    const identityProviderName = Utils.requireFromEnv("IDENTITY_PROVIDER_NAME");
+    const identityProviderMetadataURL = Utils.requireFromEnv("IDENTITY_PROVIDER_METADATA_URL");
 
-    let domain = process.env.COGNITO_DOMAIN_NAME;
-    if (!domain) {
-      throw new Error("COGNITO_DOMAIN_NAME environment variable must be defined");
-    }
+    const nodeRuntime: Runtime = lambda.Runtime.NodeJS810;
+    const tokenHeaderName = "Authorization";
+    const groupsAttributeClaimName = "custom:" + groupsAttributeName;
 
     const userPool: CfnUserPool = new cognito.CfnUserPool(this, id + "Pool", {
       usernameAttributes: ["email"],
@@ -67,7 +74,7 @@ export class CdkStack extends cdk.Stack {
 
     // lambda function
     const apiFunction = new lambda.Function(this, "APIFunction", {
-      runtime: lambda.Runtime.NodeJS810,
+      runtime: nodeRuntime,
       handler: "index.handler",
       code: lambda.Code.asset("../lambda/api/dist/packed"),
       environment: {
@@ -81,14 +88,12 @@ export class CdkStack extends cdk.Stack {
 
     // api
 
-    let api = new apigateway.RestApi(this, id + "API");
-    let integration = new apigateway.LambdaIntegration(apiFunction, {
+    const api = new apigateway.RestApi(this, id + "API");
+    const integration = new apigateway.LambdaIntegration(apiFunction, {
       proxy: true
     });
 
-    let tokenHeaderName = "Authorization";
-
-    let cfnAuthorizer = new apigateway.CfnAuthorizer(this, id, {
+    const cfnAuthorizer = new apigateway.CfnAuthorizer(this, id, {
       name: "CognitoAuthorizer",
       type: AuthorizationType.Cognito,
       identitySource: "method.request.header." + tokenHeaderName,
@@ -98,7 +103,7 @@ export class CdkStack extends cdk.Stack {
 
     // capture all requests - require authorization
 
-    let proxyResource = api.root.addResource("{proxy+}");
+    const proxyResource = api.root.addResource("{proxy+}");
     proxyResource.addMethod("OPTIONS", integration);
     proxyResource.addMethod("ANY", integration, {
       authorizerId: cfnAuthorizer.authorizerId,
@@ -115,7 +120,7 @@ export class CdkStack extends cdk.Stack {
     // lambda function
     // noinspection JSUnusedLocalSymbols
     const preTokenGeneration = new lambda.Function(this, "PreTokenGeneration", {
-      runtime: lambda.Runtime.NodeJS810,
+      runtime: nodeRuntime,
       handler: "index.handler",
       code: lambda.Code.asset("../lambda/pretokengeneration/dist/src"),
       environment: {
@@ -123,8 +128,26 @@ export class CdkStack extends cdk.Stack {
       },
     });
 
+    const attributeMapping: AttributeMappingType = {
+      "email": "email",
+      "family_name": "lastName",
+      "name": "firstName"
+    };
+    attributeMapping[groupsAttributeClaimName] = "groups";
+
+    const cognitoIdPConstruct = new CognitoIdPCustomResourceConstruct(this, "CognitoIdP", {
+      ProviderName: identityProviderName,
+      ProviderDetails: {
+        IDPSignout: "true",
+        MetadataURL: identityProviderMetadataURL
+      },
+      ProviderType: "SAML",
+      AttributeMapping: attributeMapping
+    }, userPool);
+
+
     const cognitoAppClient = new CognitoAppClientCustomResourceConstruct(this, "CognitoAppClient", {
-      SupportedIdentityProviders: ["COGNITO"],
+      SupportedIdentityProviders: ["COGNITO", identityProviderName],
       ClientName: "Web",
       AllowedOAuthFlowsUserPoolClient: true,
       AllowedOAuthFlows: ["code"],
@@ -136,6 +159,8 @@ export class CdkStack extends cdk.Stack {
 
     }, userPool);
 
+    cognitoAppClient.node.addDependency(cognitoIdPConstruct);
+
     const cognitoDomain = new CognitoDomainCustomResourceConstruct(this, "CognitoDomain", {
       Domain: domain,
     }, userPool);
@@ -144,17 +169,9 @@ export class CdkStack extends cdk.Stack {
       PreTokenGenerationLambdaArn: preTokenGeneration.functionArn
     }, userPool);
 
-    //ProviderType: "SAML",
-    //   ProviderName: "okta",
-    //   ProviderDetails: {
-    //     MetadataURL:""
-    //   },
-    //   AttributeMapping: {
-    //     "groups": groupsAttributeName
-    //   }
 
     // Publish the custom resource output
-    new cdk.CfnOutput(this, "APIUrl", {
+    new cdk.CfnOutput(this, "APIUrlOutput", {
       description: "API URL",
       value: api.url
     });
@@ -183,10 +200,20 @@ export class CdkStack extends cdk.Stack {
 }
 
 const app = new cdk.App();
+
+// NOTE: you should explicitly add the region and account for production use.
+
 // tslint:disable-next-line:no-unused-expression
-let cdkStack = new CdkStack(app, "ReInforce2019Demo");
+
+const stackName = Utils.requireFromEnv("STACK_NAME");
+const stackAccount = Utils.requireFromEnv("STACK_ACCOUNT");
+const stackRegion = Utils.requireFromEnv("STACK_REGION");
+
+// see https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html
+// "The AWS CDK team recommends that you explicitly set your account and region using the env property on a stack when you deploy stacks to production."
+
+const cdkStack = new CdkStack(app, stackName, {env: {region: stackRegion, account: stackAccount}});
+
 
 //TODO: how to extract stack info so we can auto configure the frontend
 // just the equivalent of aws cloudformation describe-stacks --stack-name ReInforce2019Demo
-
-app.run();

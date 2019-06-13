@@ -1,11 +1,12 @@
 export interface PreTokenGenerationEvent {
   triggerSource?: string;
+  userPoolId?: string;
   request: {
     userAttributes: { [key: string]: string },
     groupConfiguration: {
       groupsToOverride: string[],
       iamRolesToOverride: string[],
-      preferredRole: string[],
+      preferredRole: string[] | null,
     },
   };
 
@@ -19,6 +20,6 @@ export interface PreTokenGenerationEvent {
         iamRolesToOverride?: string[],
         preferredRole?: string,
       },
-    },
+    } | null,
   };
 }

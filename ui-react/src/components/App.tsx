@@ -83,24 +83,24 @@ class App extends Component<AppProps, State> {
   render() {
 
     const {authState, pets, user, error, selectedPet, message}: Readonly<State> = this.state;
-    let claims = getClaims(user);
 
-    let username = null;
-    let groups: string[] = [];
-    if (claims.email) {
-
+    const claims = getClaims(user);
+    console.log("Claims: ", claims);
+    let username;
+    if(claims && claims.email) {
       username = claims.email;
-      if (!username) {
-        username = user.getUsername();
-      }
-      groups = getGroups(claims);
-
+    } else if (user) {
+      username = user.getUsername();
     }
+
+    const groups: string[] = getGroups(claims);
 
     return (
       <React.Fragment>
         <nav className="navbar navbar-expand-md navbar-dark bg-dark">
-          <a className="navbar-brand" href="#">Cognito + Amplify + React Demo</a>
+
+          <a className="navbar-brand" href="/">Cognito + Amplify + React Demo</a>
+
           <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault"
                   aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
             <span className="navbar-toggler-icon"/>
@@ -169,7 +169,7 @@ class App extends Component<AppProps, State> {
               <input className="form-control" type="text" value={selectedPet.type || ""} placeholder="Type"
                      onChange={e => this.handleChange(e, (state, value) => state.selectedPet.type = value)}/>
               <input className="form-control" type="text" value={selectedPet.price || ""} placeholder="Price"
-                     onChange={e => this.handleChange(e, (state, value) => state.selectedPet.price = value as number)}/>
+                     onChange={e => this.handleChange(e, (state, value) => state.selectedPet.price = this.getAsNumber(value))}/>
               <input type="submit" className="btn btn-success" value={selectedPet.id ? "Update" : "Save"}/>
             </form>}
 
@@ -234,6 +234,15 @@ class App extends Component<AppProps, State> {
     } catch (e) {
       console.log(e);
     }
+  }
+
+  private getAsNumber(value: any) : number | undefined {
+    if(value) {
+      try {
+        return parseInt(value)
+      } catch (ignored) {}
+    }
+    return undefined;
   }
 }
 

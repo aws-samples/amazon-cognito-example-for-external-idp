@@ -1,15 +1,13 @@
 import cfn = require("@aws-cdk/aws-cloudformation");
 import lambda = require("@aws-cdk/aws-lambda");
 import cdk = require("@aws-cdk/cdk");
+import iam = require("@aws-cdk/aws-iam");
 import {Code, FunctionBase} from "@aws-cdk/aws-lambda";
-import {
-  CognitoDomainCustomResourceParams
-} from "../customResourceLambdas/cognitoDomainCustomResourceHandler";
 import {Construct} from "@aws-cdk/cdk";
 import {CfnUserPool} from "@aws-cdk/aws-cognito";
-import iam = require("@aws-cdk/aws-iam");
 import {PolicyStatementEffect} from "@aws-cdk/aws-iam";
 import {Omit} from "../customResourceLambdas/customResourceHandler";
+import {CreateUserPoolDomainRequest} from "aws-sdk/clients/cognitoidentityserviceprovider";
 
 
 export class CognitoDomainCustomResourceConstruct extends cdk.Construct {
@@ -18,7 +16,7 @@ export class CognitoDomainCustomResourceConstruct extends cdk.Construct {
   public region: string;
   public readonly lambda: FunctionBase;
 
-  constructor(scope: Construct, id: string, props: Omit<CognitoDomainCustomResourceParams, "UserPoolId">, userPool: CfnUserPool) {
+  constructor(scope: Construct, id: string, props: Omit<CreateUserPoolDomainRequest, "UserPoolId">, userPool: CfnUserPool) {
     super(scope, id);
 
     this.node.addDependency(userPool);
@@ -32,9 +30,8 @@ export class CognitoDomainCustomResourceConstruct extends cdk.Construct {
 
     });
 
-    //TODO: narrow down permissions and add a convenient method
-    let customResourceLambdaPolicy = new iam.PolicyStatement(PolicyStatementEffect.Allow);
-    customResourceLambdaPolicy.addAction("cognito-idp:*").addResource(userPool.userPoolArn);
+    const customResourceLambdaPolicy = new iam.PolicyStatement(PolicyStatementEffect.Allow);
+    customResourceLambdaPolicy.addAction("cognito-idp:*UserPoolDomain").addResource(userPool.userPoolArn);
     customResourceLambdaPolicy.addAction("cognito-idp:DescribeUserPoolDomain").addResource("*");
     this.lambda.addToRolePolicy(customResourceLambdaPolicy);
 

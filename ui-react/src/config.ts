@@ -1,31 +1,34 @@
 import {AuthOptions, AwsCognitoOAuthOpts} from '@aws-amplify/auth/lib/types';
+// auto generated based on CloudFormation stack output values
+import {autoGenConfigParams} from "./autoGenConfig";
 
 // your Cognito Hosted UI configuration
+
+// for demonstration purposes, replace with actual URL
+const redirectURI = window.location.protocol + "//" + window.location.host + "/";
+
 const OAUTH_OPTS: AwsCognitoOAuthOpts = {
-  domain: "reinforce2019.auth.us-west-2.amazoncognito.com",
+  domain: autoGenConfigParams.cognitoDomain,
 
   scope: ['phone', 'email', 'openid'],
 
-  redirectSignIn: 'http://localhost:3000/',
+  redirectSignIn: redirectURI,
 
-  redirectSignOut: 'http://localhost:3000/',
+  redirectSignOut: redirectURI,
 
   responseType: 'code' // or token
 };
 
 export const AUTH_OPTS: AuthOptions = {
 
-  // // REQUIRED only for Federated Authentication - Amazon Cognito Identity Pool ID
-  // identityPoolId: 'us-west-2:1f2d0617-6cb4-47b9-b04b-d3ccaf088da5',
-
   // REQUIRED - Amazon Cognito Region
-  region: "us-west-2",
+  region: autoGenConfigParams.region,
 
   // OPTIONAL - Amazon Cognito User Pool ID
-  userPoolId: "us-west-2_CunThltbS",
+  userPoolId: autoGenConfigParams.cognitoUserPoolId,
 
   // OPTIONAL - Amazon Cognito Web Client ID (26-char alphanumeric string)
-  userPoolWebClientId: "1q4r4j7tmmvd6n4o2s8ahg6iir",
+  userPoolWebClientId: autoGenConfigParams.cognitoUserPoolAppClientId,
 
   // OPTIONAL - Enforce user authentication prior to accessing AWS resources or not
   mandatorySignIn: false,
@@ -53,5 +56,8 @@ export const AUTH_OPTS: AuthOptions = {
   authenticationFlowType: 'USER_PASSWORD_AUTH'*/
 };
 
-//export const API_URL = "https://svtd9m4652.execute-api.us-west-2.amazonaws.com/prod";
-export const API_URL = "http://localhost:3001";
+
+export const API_URL = autoGenConfigParams.apiUrl;
+
+//For local testing:
+//export const API_URL = "http://localhost:3001";
