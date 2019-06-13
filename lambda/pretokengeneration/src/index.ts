@@ -40,13 +40,20 @@ export const handler = async (event: PreTokenGenerationEvent): Promise<PreTokenG
   let ldapGroupsArr = [...event.request.groupConfiguration.groupsToOverride];
   // no claims to supress yet
   const claimsToSuppress = [];
-  if (ldapGroups && ldapGroups.startsWith("[") && ldapGroups.endsWith("]")) {
-    // this is how it is received from SAML
-    // remove [ and ] chars. (we would use JSON.parse but the items in the list are not with quotes so it will fail)
-    ldapGroups = ldapGroups.substring(1, ldapGroups.length - 1);
-    if (ldapGroups) {
-      ldapGroupsArr.push(...ldapGroups.split(/\s*,\s*/));
+  if (ldapGroups) {
+
+    if (ldapGroups.startsWith("[") && ldapGroups.endsWith("]")) {
+      // this is how it is received from SAML mapping if we have more than one group
+      // remove [ and ] chars. (we would use JSON.parse but the items in the list are not with quotes so it will fail)
+      ldapGroups = ldapGroups.substring(1, ldapGroups.length - 1);
+      if (ldapGroups) {
+        ldapGroupsArr.push(...ldapGroups.split(/\s*,\s*/));
+      }
+    } else {
+      // this is just one group, no [ or ] added
+      ldapGroupsArr.push(ldapGroups);
     }
+
     // remove the attribute we used to map the groups into
     claimsToSuppress.push(GROUPS_ATTRIBUTE_NAME);
   }

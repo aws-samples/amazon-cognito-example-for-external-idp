@@ -166,5 +166,29 @@ describe("lambda handler", () => {
     expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["DemoAppAdmins", "DemoAppUsers"]);
 
   });
+  it("GET success - remove idp auto generated groups - one group", async () => {
+
+    const result = await handler({
+      "userPoolId": "us-west-2_abc",
+      "request": {
+        "userAttributes": {
+          "cognito:user_status": "EXTERNAL_PROVIDER",
+          "custom:ADGroups": "DemoAppUsers"
+        },
+        "groupConfiguration": {
+          "groupsToOverride": ["us-west-2_abc"],
+          "iamRolesToOverride": [],
+          "preferredRole": null
+        }
+      },
+      "response": {"claimsOverrideDetails": null}
+    });
+
+    console.log(JSON.stringify(result.response, null, 2));
+
+    // tslint:disable-next-line:max-line-length
+    expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["DemoAppUsers"]);
+
+  });
 
 });
