@@ -9,11 +9,11 @@ import {
 import * as aws from "aws-sdk";
 import {UpdateUserPoolRequest} from "aws-sdk/clients/cognitoidentityserviceprovider";
 
-
 export interface CognitoPreTokenGenerationParams {
   UserPoolId: string;
   PreTokenGenerationLambdaArn?: string;
 }
+
 
 const cognitoIdP = new aws.CognitoIdentityServiceProvider();
 

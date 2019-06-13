@@ -13,7 +13,7 @@ import {CognitoPreTokenGenerationResourceConstruct} from "./customResourceConstr
 import {CognitoIdPCustomResourceConstruct} from "./customResourceConstructs/cognitoIdPCustomResourceConstruct";
 import {AttributeMappingType} from "aws-sdk/clients/cognitoidentityserviceprovider";
 import {Utils} from "./utils";
-import {Runtime} from "@aws-cdk/aws-lambda";
+import {Runtime, Function} from "@aws-cdk/aws-lambda";
 
 /**
  * Define a CloudFormation stack that creates a serverless application with
@@ -169,7 +169,7 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     // See also:
     // - https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html
 
-    const preTokenGeneration = new lambda.Function(this, "PreTokenGeneration", {
+    const preTokenGeneration: Function = new lambda.Function(this, "PreTokenGeneration", {
       runtime: nodeRuntime,
       handler: "index.handler",
       code: lambda.Code.asset("../lambda/pretokengeneration/dist/src"),
@@ -178,9 +178,9 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
       },
     });
 
-    new CognitoPreTokenGenerationResourceConstruct(this, "CognitoPreTokenGen", {
-      PreTokenGenerationLambdaArn: preTokenGeneration.functionArn
-    }, userPool);
+    const preTokenGenConstruct = new CognitoPreTokenGenerationResourceConstruct(this, "CognitoPreTokenGen", userPool, preTokenGeneration);
+
+    //preTokenGenConstruct.node.addDependency(preTokenGeneration);
 
     // ========================================================================
     // Resource: Identity Provider Settings
