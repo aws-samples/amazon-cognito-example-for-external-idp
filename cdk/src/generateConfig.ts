@@ -49,7 +49,9 @@ IdP Settings:
 
   - Single sign on URL: https://${cognitoDomain}/saml2/idpresponse
   - Audience URI (SP Entity ID): urn:amazon:cognito:sp:${userPoolId}
-  - Group Attribute Statements (optional): Name=groups, Filter=Starts With (prefix) / Regex (.*)   
+  - Group Attribute Statements (optional): Name=groups, Filter=Starts With (prefix) / Regex (.*)
+  - See also: https://aws.amazon.com/premiumsupport/knowledge-center/cognito-okta-saml-identity-provider/ 
+     
     `)
 
   }

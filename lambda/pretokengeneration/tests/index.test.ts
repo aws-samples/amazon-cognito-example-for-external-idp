@@ -53,7 +53,7 @@ describe("lambda handler", () => {
             preferredRole: [],
           },
         userAttributes: {
-          "custom:ADGroups": "[test1, test2]",
+          "custom:groups": "[test1, test2]",
         },
       },
       response: {},
@@ -61,7 +61,7 @@ describe("lambda handler", () => {
 
     console.log(result.response);
 
-    expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.contain("custom:ADGroups");
+    expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.contain("custom:groups");
     // tslint:disable-next-line:max-line-length
     expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["test1", "test2"]);
     // expect(result.response.claimsOverrideDetails!.claimsToAddOrOverride).to.be.undefined;
@@ -79,7 +79,7 @@ describe("lambda handler", () => {
             preferredRole: [],
           },
         userAttributes: {
-          "custom:ADGroups": "[]",
+          "custom:groups": "[]",
         },
       },
       response: {},
@@ -87,7 +87,7 @@ describe("lambda handler", () => {
 
     console.log(result.response);
 
-    expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.contain("custom:ADGroups");
+    expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.contain("custom:groups");
     // tslint:disable-next-line:max-line-length
     expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["test"]);
     // expect(result.response.claimsOverrideDetails!.claimsToAddOrOverride).to.be.undefined;
@@ -104,7 +104,7 @@ describe("lambda handler", () => {
             preferredRole: [],
           },
         userAttributes: {
-          "custom:ADGroups": "[DemoAppAdmins, DemoAppUsers]",
+          "custom:groups": "[DemoAppAdmins, DemoAppUsers]",
         },
       },
       response: {},
@@ -112,7 +112,7 @@ describe("lambda handler", () => {
 
     console.log(JSON.stringify(result.response, null, 2));
 
-    expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.contain("custom:ADGroups");
+    expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.contain("custom:groups");
     // tslint:disable-next-line:max-line-length
     expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["test", "DemoAppAdmins", "DemoAppUsers"]);
     // expect(result.response.claimsOverrideDetails!.claimsToAddOrOverride).to.be.undefined;
@@ -149,7 +149,7 @@ describe("lambda handler", () => {
       "request": {
         "userAttributes": {
           "cognito:user_status": "EXTERNAL_PROVIDER",
-          "custom:ADGroups": "[DemoAppAdmins, DemoAppUsers]"
+          "custom:groups": "[DemoAppAdmins, DemoAppUsers]"
         },
         "groupConfiguration": {
           "groupsToOverride": ["us-west-2_abc"],
@@ -173,7 +173,7 @@ describe("lambda handler", () => {
       "request": {
         "userAttributes": {
           "cognito:user_status": "EXTERNAL_PROVIDER",
-          "custom:ADGroups": "DemoAppUsers"
+          "custom:groups": "DemoAppUsers"
         },
         "groupConfiguration": {
           "groupsToOverride": ["us-west-2_abc"],

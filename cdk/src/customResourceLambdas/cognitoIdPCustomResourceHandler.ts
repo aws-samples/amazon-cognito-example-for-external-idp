@@ -22,7 +22,7 @@ const cognitoIdP = new aws.CognitoIdentityServiceProvider();
       "SSORedirectBindingURI": "https://.../sso/saml"
     },
     "AttributeMapping": {
-      "custom:ADGroups": "groups",
+      "custom:groups": "groups",
       "email": "email",
       "family_name": "lastName",
       "name": "firstName"

@@ -106,7 +106,13 @@ AWS Amplify can manage all aspects of a project, but since we used AWS CDK, we f
   This is not used for enforcing authorization, this is done only in the backend (via [Amazon Cognito User Pools Authorizer](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-integrate-with-cognito.html)).
   However it provides a nicer user experience where actions that the user will not be permitted to perform are not visible / grayed out for them.
   
+## IdP Configuration Instructions 
 
+- **Okta**: https://aws.amazon.com/premiumsupport/knowledge-center/cognito-okta-saml-identity-provider/
+
+- **ADFS**: 
+  - https://aws.amazon.com/blogs/mobile/building-adfs-federation-for-your-web-app-using-amazon-cognito-user-pools/
+  - https://aws.amazon.com/premiumsupport/knowledge-center/cognito-ad-fs-saml/
  
 ## License Summary
 
