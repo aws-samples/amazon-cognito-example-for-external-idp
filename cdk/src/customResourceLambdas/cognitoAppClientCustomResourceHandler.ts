@@ -9,8 +9,6 @@ import {
 import * as aws from "aws-sdk";
 import {CreateUserPoolClientRequest} from "aws-sdk/clients/cognitoidentityserviceprovider";
 
-
-
 export type CognitoAppClientCustomResourceParams = Omit<CreateUserPoolClientRequest, "SupportedIdentityProviders">
   & { SupportedIdentityProviders: ("COGNITO" | "Facebook" | "Google" | "LoginWithAmazon" | string)[] };
 
