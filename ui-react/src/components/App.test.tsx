@@ -8,6 +8,9 @@ it('renders without crashing', () => {
   const div = document.createElement('div');
 
   let abstractPetService = (new class implements PetService{
+    deletePet(pet: Pet): Promise<void> {
+      return undefined;
+    }
     getAllPets(): Promise<Pet[]> {
       //TODO: implement
       return undefined;

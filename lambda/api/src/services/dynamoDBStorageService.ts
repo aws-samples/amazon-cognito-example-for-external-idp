@@ -1,20 +1,3 @@
-/*
- * Copyright 2019. Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- *  Licensed under the Apache License, Version 2.0 (the "License").
- *  You may not use this file except in compliance with the License.
- *  A copy of the License is located at
- *
- *          http://aws.amazon.com/apache2.0/
- *
- *  or in the "license" file accompanying this file.
- *  This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
- *  OR CONDITIONS OF ANY KIND, either express or implied. See the
- *  License for the specific language governing permissions
- *  and limitations under the License.
- *
- */
-
 import AWS = require("aws-sdk");
 import {DocumentClient} from "aws-sdk/lib/dynamodb/document_client";
 import {StorageService} from "./storageService";
@@ -29,18 +12,20 @@ export class DynamoDBStorageService implements StorageService {
     this.docClient = new AWS.DynamoDB.DocumentClient(endpoint ? {endpoint} : undefined);
   }
 
-  public async getPet(id: string): Promise<Pet | undefined> {
+  public async getPet(id: string): Promise<Pet | null> {
 
     try {
       const data = await this.docClient.get({
         TableName: this.tableName,
         Key: {id},
         ConsistentRead: true,
-
       }).promise();
 
       return data.Item as Pet;
     } catch (ex) { // AWSError
+      if (ex.code === "ResourceNotFoundException") {
+        return null;
+      }
       console.warn("Error getting entry", ex);
       throw ex;
     }
@@ -80,10 +65,26 @@ export class DynamoDBStorageService implements StorageService {
 
       return result;
     } catch (ex) { // AWSError
-      console.warn("Error getting entry", ex);
+      console.warn("Error getting all entries", ex);
       throw ex;
     }
 
+  }
+
+  public async deletePet(id: string): Promise<void> {
+    try {
+      await this.docClient.delete({TableName: this.tableName, Key: {id}}).promise();
+    } catch (ex) {
+      console.warn("Error deleting entry", ex);
+      throw ex;
+    }
+  }
+
+  public async getAllPetsByOwner(owner: string): Promise<Pet[]> {
+    // in a real world scenario this will be probably using a query on a global secondary index (owner)
+    // for simplicity of the demo, this will just filter the scanned results
+
+    return (await this.getAllPets()).filter((pet) => pet.owner === owner);
   }
 
 }

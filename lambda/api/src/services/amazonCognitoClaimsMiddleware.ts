@@ -20,8 +20,9 @@ export interface Claims {
 declare global {
   namespace Express {
     interface Request {
-      claims?: Claims;
+      claims: Claims;
       groups: Set<string>;
+      username: string;
       apiGateway?: {
         event: APIGatewayProxyEvent & {
           requestContext: APIGatewayEventRequestContext & {
@@ -52,18 +53,42 @@ const getGroups = (claims: Claims): Set<string> => {
   return new Set<string>();
 };
 
-export function amazonCognitoGroups(): RequestHandler {
+/**
+ * Creates a middleware that enriches the request object with:
+ * - claims: Claims (JWT ID token claims)
+ * - groups: Set<string> (Cognito User Pool Groups, from the cognito:groups claim)
+ *
+ * It will return a 401 if a JWT was not supplied / not valid
+ * It will return a 403 if non of the supportedGroups exists in the claim
+ *
+ * @param supportedGroups any group that allows the user to do something useful in the app
+ *      if the user has none of them, we just return 403 Forbidden as they can't do anything
+ */
+export function amazonCognitoAuthorizer(...supportedGroups: string[]): RequestHandler {
   return (req: Request, res: Response, next: NextFunction): any => {
     const claims = getClaims(req);
     if (claims) {
       req.claims = claims;
+      req.username = claims["cognito:username"];
       const groups = getGroups(claims);
       if (groups) {
         req.groups = groups;
       }
+
+      // check if the user has at least 1 required group
+      // e.g. if the claim has [g1]
+      // and basicGroups includes [g1, g2]
+      // it means the user has at least one of the groups that allows them to do something
+
+      const userHasAtLeastOneSupportedGroup = supportedGroups.some((g) => groups.has(g));
+      if (!userHasAtLeastOneSupportedGroup) {
+        res.status(403).json({error: "Unauthorized"});
+      } else {
+        next();
+      }
     } else {
-      req.groups = new Set();
+      // should be caught by API Gateway, just a sanity check.
+      res.status(401).header("WWW-Authenticate", "Bearer realm=\"Access to API\"").send();
     }
-    next();
   };
 }

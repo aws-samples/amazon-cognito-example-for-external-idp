@@ -13,7 +13,7 @@ import {CognitoPreTokenGenerationResourceConstruct} from "./customResourceConstr
 import {CognitoIdPCustomResourceConstruct} from "./customResourceConstructs/cognitoIdPCustomResourceConstruct";
 import {AttributeMappingType} from "aws-sdk/clients/cognitoidentityserviceprovider";
 import {Utils} from "./utils";
-import {Runtime, Function} from "@aws-cdk/aws-lambda";
+import {Function, Runtime} from "@aws-cdk/aws-lambda";
 
 /**
  * Define a CloudFormation stack that creates a serverless application with
@@ -28,10 +28,16 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     // Environment variables and constants
     // ========================================================================
 
-    const domain = Utils.requireFromEnv("COGNITO_DOMAIN_NAME");
-    const groupsAttributeName = Utils.requireFromEnv("GROUPS_ATTRIBUTE_NAME");
-    const identityProviderName = Utils.requireFromEnv("IDENTITY_PROVIDER_NAME");
-    const identityProviderMetadataURL = Utils.requireFromEnv("IDENTITY_PROVIDER_METADATA_URL");
+    const domain = Utils.getEnv("COGNITO_DOMAIN_NAME");
+    const identityProviderName = Utils.getEnv("IDENTITY_PROVIDER_NAME");
+    const identityProviderMetadataURL = Utils.getEnv("IDENTITY_PROVIDER_METADATA_URL");
+
+    const groupsAttributeName = Utils.getEnv("GROUPS_ATTRIBUTE_NAME", "groups");
+    const allowedOrigin = Utils.getEnv("ALLOWED_ORIGIN", "*");
+    const adminsGroupName = Utils.getEnv("ADMINS_GROUP_NAME", "pet-app-admins");
+    const usersGroupName = Utils.getEnv("USERS_GROUP_NAME", "pet-app-admins");
+    const lambdaMemory = parseInt(Utils.getEnv("LAMBDA_MEMORY", "128"));
+
 
     const nodeRuntime: Runtime = lambda.Runtime.NodeJS810;
     const tokenHeaderName = "Authorization";
@@ -75,9 +81,7 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
       billingMode: BillingMode.PayPerRequest,
       sseEnabled: true,
       streamSpecification: StreamViewType.NewAndOldImages, // to enable global tables
-      partitionKey: {name: "key", type: dynamodb.AttributeType.String},
-      sortKey: {name: "range", type: dynamodb.AttributeType.Number},
-
+      partitionKey: {name: "id", type: dynamodb.AttributeType.String}
     });
 
     // ========================================================================
@@ -94,8 +98,13 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
       runtime: nodeRuntime,
       handler: "index.handler",
       code: lambda.Code.asset("../lambda/api/dist/packed"),
+      timeout: 30,
+      memorySize: lambdaMemory,
       environment: {
         TABLE_NAME: table.tableName,
+        ALLOWED_ORIGIN: allowedOrigin,
+        ADMINS_GROUP_NAME: adminsGroupName,
+        USERS_GROUP_NAME: usersGroupName
       },
     });
 
@@ -138,26 +147,31 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     // Root (/) - no authorization required
     // ------------------------------------------------------------------------
 
-    api.root.addMethod("OPTIONS", integration);
-    api.root.addMethod("ANY", integration);
-    // capture all requests - require authorization
+    const rootResource = api.root;
+
+    rootResource.addMethod("ANY", integration);
 
     // ------------------------------------------------------------------------
-    // Root (/) - authorization required (except for OPTIONS)
+    // All Other Paths (/{proxy+}) - authorization required
     // ------------------------------------------------------------------------
 
-    // captures all other requests
-    const proxyResource = api.root.addResource("{proxy+}");
+    // all other paths require the cognito authorizer (validates the JWT and passes it to the lambda)
 
-    // since we want a strict CORS policy based on a whitelist of origins, we let express.js handle OPTIONS for us
-    // if there is only one origin then this can be handled via a mock integration in API Gateway
-    proxyResource.addMethod("OPTIONS", integration);
+    const proxyResource = rootResource.addResource("{proxy+}");
 
-    // all other methods require the cognito authorizer (validates the JWT and passes it to the lambda)
     proxyResource.addMethod("ANY", integration, {
       authorizerId: cfnAuthorizer.authorizerId,
-      authorizationType: AuthorizationType.Cognito
+      authorizationType: AuthorizationType.Cognito,
     });
+
+    // ------------------------------------------------------------------------
+    // // add CORS support to all
+    // ------------------------------------------------------------------------
+
+    Utils.addCorsOptions(proxyResource, allowedOrigin);
+    Utils.addCorsOptions(rootResource, allowedOrigin);
+
+
 
     // ========================================================================
     // Resource: Pre Token Generation function
@@ -221,7 +235,7 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
       ClientName: "Web",
       AllowedOAuthFlowsUserPoolClient: true,
       AllowedOAuthFlows: ["code"],
-      AllowedOAuthScopes: ["phone", "email", "openid"],
+      AllowedOAuthScopes: ["phone", "email", "openid", "profile"],
       GenerateSecret: false,
       RefreshTokenValidity: 1,
       //TODO: add your app's prod URLs here
@@ -275,7 +289,6 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
       description: "Cognito Domain",
       value: cognitoDomain.domain
     });
-
   }
 }
 
@@ -284,9 +297,9 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
 
 const app = new cdk.App();
 
-const stackName = Utils.requireFromEnv("STACK_NAME");
-const stackAccount = Utils.requireFromEnv("STACK_ACCOUNT");
-const stackRegion = Utils.requireFromEnv("STACK_REGION");
+const stackName = Utils.getEnv("STACK_NAME");
+const stackAccount = Utils.getEnv("STACK_ACCOUNT");
+const stackRegion = Utils.getEnv("STACK_REGION");
 
 
 // The AWS CDK team recommends that you explicitly set your account and region using the env property on a stack when

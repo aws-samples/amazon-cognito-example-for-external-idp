@@ -1,16 +1,16 @@
 import {AuthOptions, AwsCognitoOAuthOpts} from '@aws-amplify/auth/lib/types';
 // auto generated based on CloudFormation stack output values
-import {autoGenConfigParams} from "./autoGenConfig";
+import {autoGenConfigParams} from './autoGenConfig';
 
 // your Cognito Hosted UI configuration
 
 // for demonstration purposes, replace with actual URL
-const redirectURI = window.location.protocol + "//" + window.location.host + "/";
+const redirectURI = window.location.protocol + '//' + window.location.host + '/';
 
 const OAUTH_OPTS: AwsCognitoOAuthOpts = {
   domain: autoGenConfigParams.cognitoDomain,
 
-  scope: ['phone', 'email', 'openid'],
+  scope: ['phone', 'email', 'openid', 'profile'],
 
   redirectSignIn: redirectURI,
 
@@ -60,4 +60,4 @@ export const AUTH_OPTS: AuthOptions = {
 export const API_URL = autoGenConfigParams.apiUrl;
 
 //For local testing:
-//export const API_URL = "http://localhost:3001";
+//export const API_URL = 'http://localhost:3001';

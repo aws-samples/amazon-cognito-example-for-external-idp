@@ -44,7 +44,6 @@ It defines the following resources
 - **Amazon DynamoDB**: Amazon DynamoDB is a serverless key-value and document database that delivers single-digit millisecond performance at any scale.
   It is used as the persistence storage layer for our example application. 
    
-
 ### /lambda/api
 
 The backend of the example. This is a standard AWS Lambda application written as a node.js (express.js) application
@@ -106,6 +105,14 @@ AWS Amplify can manage all aspects of a project, but since we used AWS CDK, we f
   This is not used for enforcing authorization, this is done only in the backend (via [Amazon Cognito User Pools Authorizer](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-integrate-with-cognito.html)).
   However it provides a nicer user experience where actions that the user will not be permitted to perform are not visible / grayed out for them.
   
+## Notes 
+
+- Do not add the `aws.cognito.signin.user.admin` scope, 
+    this will allow users to modify their own attributes directly with the access token. 
+    Since the IdP is the source of truth, and we don't want users to change attributes 
+    (especially those used for authorization) on their own, this scope should not be added. 
+
+ 
 ## IdP Configuration Instructions 
 
 - **Okta**: https://aws.amazon.com/premiumsupport/knowledge-center/cognito-okta-saml-identity-provider/
@@ -113,7 +120,7 @@ AWS Amplify can manage all aspects of a project, but since we used AWS CDK, we f
 - **ADFS**: 
   - https://aws.amazon.com/blogs/mobile/building-adfs-federation-for-your-web-app-using-amazon-cognito-user-pools/
   - https://aws.amazon.com/premiumsupport/knowledge-center/cognito-ad-fs-saml/
- 
+
 ## License Summary
 
 This sample code is made available under the [MIT-0 license](https://github.com/aws/mit-0). See the LICENSE file.

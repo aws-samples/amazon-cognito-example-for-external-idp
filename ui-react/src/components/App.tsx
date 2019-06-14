@@ -28,6 +28,7 @@ interface State {
   error?: any;
   message?: string;
   selectedPet?: Pet;
+  loading?: boolean;
 }
 
 class App extends Component<AppProps, State> {
@@ -62,16 +63,15 @@ class App extends Component<AppProps, State> {
 
     try {
       let user: CognitoUser = await Auth.currentAuthenticatedUser();
-      console.log('on component mount');
       this.setState({authState: 'signedIn', user: user});
     } catch (e) {
-      console.log(e);
+      console.warn(e);
       this.setState({authState: 'signIn', user: null});
     }
   }
 
   async componentDidUpdate(prevProps: Readonly<any>, prevState: Readonly<State>) {
-    console.log(prevState, this.state);
+
     if (prevState.authState !== this.state.authState) {
 
       if (this.state.authState === "signedIn") {
@@ -82,15 +82,14 @@ class App extends Component<AppProps, State> {
 
   render() {
 
-    const {authState, pets, user, error, selectedPet, message}: Readonly<State> = this.state;
+    const {authState, pets, user, error, selectedPet, message, loading}: Readonly<State> = this.state;
 
     const claims = getClaims(user);
-    console.log("Claims: ", claims);
+
     let username;
-    if(claims && claims.email) {
-      username = claims.email;
-    } else if (user) {
-      username = user.getUsername();
+
+    if (claims && claims.name) {
+      username = claims.name;
     }
 
     const groups: string[] = getGroups(claims);
@@ -106,31 +105,40 @@ class App extends Component<AppProps, State> {
             <span className="navbar-toggler-icon"/>
           </button>
 
+
           <div className="collapse navbar-collapse" id="navbarsExampleDefault">
             <ul className="navbar-nav mr-auto">
               <li className="nav-item active">
                 <a className="nav-link" href="/">Home <span className="sr-only">(current)</span></a>
               </li>
+
             </ul>
-            <div className="my-2 my-lg-0">
+            {[...groups].map(group =>
+              <span className={`badge badge-${group.endsWith("admins") ? "success" : "info"} mr-2`}
+                    key={group}>{group}</span>)}
+            <div className="my-2 my-lg-0 navbar-nav">
+
 
               {authState === 'loading' && (<div>loading...</div>)}
               {authState === 'signIn' &&
               <button className="btn btn-primary" onClick={() => Auth.federatedSignIn()}>Sign In / Sign Up</button>}
-              {authState === 'signedIn' && <div>
-                <span className="badge badge-info">{username}</span> &nbsp;
-                {[...groups].map(group => <span key={group} className="badge badge-success mr-2">{group}</span>)}
-                <button className="btn btn-warning" onClick={() => this.signOut()}>Sign out</button>
+              {authState === 'signedIn' &&
 
-              </div>}
+
+              <div className="nav-item dropdown">
+                <a href="#" className="nav-link dropdown-toggle" data-toggle="dropdown">{username}</a>
+                <div className="dropdown-menu dropdown-menu-right">
+                  <button className="dropdown-item btn btn-warning" onClick={() => this.signOut()}>Sign out</button>
+                </div>
+              </div>
+
+              }
 
             </div>
           </div>
         </nav>
 
         <div className="container-fluid">
-
-          {/* Error Messages */}
 
           {error &&
           <div className="alert alert-warning" onClick={() => this.setState({error: null})}>{error.toString()}</div>}
@@ -145,7 +153,7 @@ class App extends Component<AppProps, State> {
             <table className="table">
               <thead>
               <tr>
-                <th>id</th>
+                <th>owner</th>
                 <th>type</th>
                 <th>price</th>
               </tr>
@@ -153,8 +161,11 @@ class App extends Component<AppProps, State> {
               </thead>
               <tbody>
               {pets.map(pet =>
-                <tr id={"row" + pet.id} key={pet.id} onClick={() => this.setState({selectedPet: pet})}>
-                  <td><span className='badge badge-secondary'>{pet.id}</span></td>
+                <tr id={"row" + pet.id} key={pet.id}
+                    onClick={() => this.setState({selectedPet: pet})}
+                    className={selectedPet && pet.id === selectedPet.id ? "table-active" : ""}
+                >
+                  <td><span className='badge badge-secondary'>{pet.owner}</span></td>
                   <td><strong>{pet.type}</strong></td>
                   <td>{numberFormat.format(pet.price || 0)}</td>
                 </tr>)
@@ -162,20 +173,39 @@ class App extends Component<AppProps, State> {
               </tbody>
             </table>}
 
+
+            {selectedPet && selectedPet.id &&
+            <button className="btn btn-danger m-1" onClick={() => this.deletePet()}>Delete</button>}
+
+            {<button className="btn btn-primary m-1" onClick={() => this.newOnClick()}>Create New</button>}
+
+            {<button className="btn btn-success m-1" onClick={() => this.getAllPets()}>Reload</button>}
+
+
             {selectedPet &&
-            <form onSubmit={e => this.savePet(e)}>
-              <input className="form-control" type="hidden" value={selectedPet.id || ""} placeholder="Id"
-                     onChange={e => this.handleChange(e, (state, value) => state.selectedPet.id = value)}/>
-              <input className="form-control" type="text" value={selectedPet.type || ""} placeholder="Type"
-                     onChange={e => this.handleChange(e, (state, value) => state.selectedPet.type = value)}/>
-              <input className="form-control" type="text" value={selectedPet.price || ""} placeholder="Price"
-                     onChange={e => this.handleChange(e, (state, value) => state.selectedPet.price = this.getAsNumber(value))}/>
-              <input type="submit" className="btn btn-success" value={selectedPet.id ? "Update" : "Save"}/>
-            </form>}
+            <div className="card">
+              <div className="card-body">
+                <form className="form-inline" onSubmit={e => this.savePet(e)}>
+                  <input className="form-control" type="hidden" value={selectedPet.id || ""} placeholder="Id"
+                         onChange={e => this.handleChange(e, (state, value) => state.selectedPet.id = value)}/>
+                  <input className="form-control" type="text" value={selectedPet.type || ""} placeholder="Type"
+                         onChange={e => this.handleChange(e, (state, value) => state.selectedPet.type = value)}/>
+                  <input className="form-control" type="text" value={selectedPet.price || ""} placeholder="Price"
+                         onChange={e => this.handleChange(e, (state, value) => state.selectedPet.price = this.getAsNumber(value))}/>
+                  <button type="submit" className="btn btn-success m-1">{selectedPet.id ? "Update" : "Save"}</button>
 
-            {<button className="btn btn-primary" onClick={() => this.newOnClick()}>Create New</button>}
+                </form>
 
-            {!pets && !error && <div className="alert alert-info">loading...</div>}
+              </div>
+            </div>}
+
+
+            {loading && <div className="d-flex justify-content-center">
+              <div className="spinner-border" role="status">
+                <span className="sr-only">Loading...</span>
+              </div>
+            </div>}
+
 
           </div>}
 
@@ -202,16 +232,19 @@ class App extends Component<AppProps, State> {
 
   async getAllPets() {
     try {
+      this.setState({loading: true, selectedPet: undefined});
       let pets: Pet[] = await this.petService.getAllPets();
-      this.setState({pets});
+      this.setState({pets, loading: false});
     } catch (e) {
-      this.setState({error: "Failed to load pets"});
+      console.log(e);
+      this.setState({error: `Failed to load pets: ${e}`, pets: [], loading: false});
     }
   }
 
   async savePet(event: FormEvent<HTMLFormElement>) {
 
     event.preventDefault();
+
 
     const pet = this.state.selectedPet;
 
@@ -220,10 +253,32 @@ class App extends Component<AppProps, State> {
       return;
     }
     try {
+      this.setState({loading: true});
       await this.petService.savePet(pet);
+
+      await this.getAllPets();
+    } catch (e) {
+      this.setState({error: "Failed to save pet. " + e.message, loading: false});
+    }
+  }
+
+  async deletePet() {
+
+    if (!window.confirm("Are you sure?")) {
+      return;
+    }
+    const pet = this.state.selectedPet;
+
+    if (!pet) {
+      this.setState({error: "Pet is needed"});
+      return;
+    }
+    try {
+      this.setState({loading: true});
+      await this.petService.deletePet(pet);
       return this.getAllPets();
     } catch (e) {
-      this.setState({error: "Failed to save pet. " + e.message});
+      this.setState({error: "Failed to save pet. " + e.message, loading: false});
     }
   }
 
@@ -236,14 +291,16 @@ class App extends Component<AppProps, State> {
     }
   }
 
-  private getAsNumber(value: any) : number | undefined {
-    if(value) {
+  private getAsNumber(value: any): number | undefined {
+    if (value) {
       try {
         return parseInt(value)
-      } catch (ignored) {}
+      } catch (ignored) {
+      }
     }
     return undefined;
   }
+
 }
 
 export default App;
