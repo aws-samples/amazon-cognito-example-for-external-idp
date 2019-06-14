@@ -8,13 +8,8 @@ import {
   Context
 } from "aws-lambda";
 import * as http from "http";
-
 import * as https from "https";
-
 import * as url from "url";
-
-//see bottom of https://www.typescriptlang.org/docs/handbook/advanced-types.html
-export type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 
 /**
  * Extend this class, implement the abstract methods, then create an instance of it

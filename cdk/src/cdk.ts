@@ -292,7 +292,6 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
   }
 }
 
-
 // generate the CDK app and stack
 
 const app = new cdk.App();
