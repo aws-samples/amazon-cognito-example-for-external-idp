@@ -8,7 +8,6 @@ import {
 import {CfnUserPool} from "@aws-cdk/aws-cognito";
 import iam = require("@aws-cdk/aws-iam");
 import {PolicyStatementEffect} from "@aws-cdk/aws-iam";
-import {Omit} from "../customResourceLambdas/customResourceHandler";
 
 export class CognitoAppClientCustomResourceConstruct extends cdk.Construct {
 

@@ -6,7 +6,6 @@ import {Code, FunctionBase} from "@aws-cdk/aws-lambda";
 import {Construct} from "@aws-cdk/cdk";
 import {CfnUserPool} from "@aws-cdk/aws-cognito";
 import {PolicyStatementEffect} from "@aws-cdk/aws-iam";
-import {Omit} from "../customResourceLambdas/customResourceHandler";
 import {CreateIdentityProviderRequestSAML} from "../customResourceLambdas/cognitoIdPCustomResourceHandler";
 import {CreateIdentityProviderRequest} from "aws-sdk/clients/cognitoidentityserviceprovider";
 

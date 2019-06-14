@@ -1,4 +1,4 @@
-import {CustomResourceHandler, Omit, ResponseData} from "./customResourceHandler";
+import {CustomResourceHandler, ResponseData} from "./customResourceHandler";
 import {
   CloudFormationCustomResourceCreateEvent,
   CloudFormationCustomResourceDeleteEvent,
@@ -7,7 +7,7 @@ import {
 } from "aws-lambda";
 
 import * as aws from "aws-sdk";
-import {CreateUserPoolClientRequest, Types as CognitoTypes} from "aws-sdk/clients/cognitoidentityserviceprovider";
+import {CreateUserPoolClientRequest} from "aws-sdk/clients/cognitoidentityserviceprovider";
 
 
 

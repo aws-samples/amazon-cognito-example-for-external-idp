@@ -1,4 +1,4 @@
-import {CustomResourceHandler, Omit, ResponseData} from "./customResourceHandler";
+import {CustomResourceHandler, ResponseData} from "./customResourceHandler";
 import {
   CloudFormationCustomResourceCreateEvent,
   CloudFormationCustomResourceDeleteEvent,
