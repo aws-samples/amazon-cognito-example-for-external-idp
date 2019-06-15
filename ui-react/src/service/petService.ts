@@ -68,7 +68,7 @@ export class AuthAwarePetService implements PetService {
         body: body ? JSON.stringify(body) : undefined,
         method: method,
         headers: {
-          "Authorization": session.getIdToken().getJwtToken(),
+          "Authorization": session.getAccessToken().getJwtToken(),
           "Content-Type": "application/json"
         }
       });

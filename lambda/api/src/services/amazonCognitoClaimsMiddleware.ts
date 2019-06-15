@@ -1,21 +1,43 @@
 import {NextFunction, Request, RequestHandler, Response} from "express";
 import {APIGatewayEventRequestContext, APIGatewayProxyEvent, AuthResponseContext, Context} from "aws-lambda";
 
-export interface Claims {
-  [name: string]: string;
+/**
+ * Common claims for both id and access tokens
+ */
+export interface ClaimsBase {
+  [name: string]: string | undefined;
 
   aud: string;
   iss: string;
-  "cognito:groups": string;
-  "cognito:username": string;
-  email: string;
-  email_verified: string;
-  auth_time: string;
+  "cognito:groups"?: string;
   exp: string;
   iat: string;
   sub: string;
   token_use: "id" | "access";
 }
+
+/**
+ * Some id token specific claims
+ */
+export interface IdTokenClaims extends ClaimsBase {
+
+  "cognito:username": string;
+  email?: string;
+  email_verified?: string;
+  auth_time: string;
+  token_use: "id";
+}
+
+/**
+ * Some access token specific claims
+ */
+export interface AccessTokenClaims extends ClaimsBase {
+
+  username?: string;
+  token_use: "access";
+}
+
+type Claims = IdTokenClaims | AccessTokenClaims;
 
 declare global {
   namespace Express {
@@ -37,15 +59,22 @@ declare global {
   }
 }
 
+/**
+ * Returns the claims information from the Lambda Proxy Request structure
+ * @param req
+ */
 const getClaims = (req: Request): Claims | null => {
-
   if (req.apiGateway && req.apiGateway.event.requestContext.authorizer) {
     return req.apiGateway.event.requestContext.authorizer.claims;
   }
   return null;
 };
 
-const getGroups = (claims: Claims): Set<string> => {
+/**
+ * Returns the groups claim from either the id or access tokens as a Set
+ * @param claims
+ */
+const getGroups = (claims: ClaimsBase): Set<string> => {
   const groups = claims["cognito:groups"];
   if (groups) {
     return new Set<string>(groups.split(/\s*,\s*/));
@@ -58,37 +87,64 @@ const getGroups = (claims: Claims): Set<string> => {
  * - claims: Claims (JWT ID token claims)
  * - groups: Set<string> (Cognito User Pool Groups, from the cognito:groups claim)
  *
- * It will return a 401 if a JWT was not supplied / not valid
  * It will return a 403 if non of the supportedGroups exists in the claim
  *
- * @param supportedGroups any group that allows the user to do something useful in the app
+ * @param opts
+ *
+ *    - supportedGroups - optional, any group that allows the user to do something useful in the app
  *      if the user has none of them, we just return 403 Forbidden as they can't do anything
+ *      if not provided, will not do this pre-check
+ *    - usernameClaimName - optional, which claim to use as username.
+ *       If not provided will use either `username`, `cognito:username` or `sub`, whichever is available
+ *
  */
-export function amazonCognitoAuthorizer(...supportedGroups: string[]): RequestHandler {
+export function amazonCognitoAuthorizer(opts?: {
+  supportedGroups?: string[],
+  usernameClaimName?: string,
+}): RequestHandler {
   return (req: Request, res: Response, next: NextFunction): any => {
+
     const claims = getClaims(req);
+
     if (claims) {
       req.claims = claims;
-      req.username = claims["cognito:username"];
-      const groups = getGroups(claims);
-      if (groups) {
-        req.groups = groups;
+      if (opts && opts.usernameClaimName) {
+        // if we were provided with the claim name to use as username
+        const usernameClaim = claims[opts.usernameClaimName];
+        if (usernameClaim) {
+          req.username = usernameClaim;
+        } else {
+          console.warn(`Username claim ${opts.usernameClaimName} was not found in token`);
+        }
+      } else if (claims["cognito:username"]) {
+        // username claim name in the id token
+        req.username = claims["cognito:username"];
+      } else if (claims.username) {
+        // username claim name in the access token
+        req.username = claims.username;
+      } else {
+        console.warn(`No username claim found in token, using sub as username`);
+        req.username = claims.sub;
       }
+
+      // always returns a Set, if no groups, it will be empty.
+      const groups = getGroups(claims);
+      req.groups = groups;
 
       // check if the user has at least 1 required group
       // e.g. if the claim has [g1]
       // and basicGroups includes [g1, g2]
       // it means the user has at least one of the groups that allows them to do something
 
-      const userHasAtLeastOneSupportedGroup = supportedGroups.some((g) => groups.has(g));
-      if (!userHasAtLeastOneSupportedGroup) {
-        res.status(403).json({error: "Unauthorized"});
-      } else {
-        next();
+      if (opts && opts.supportedGroups) {
+        const userHasAtLeastOneSupportedGroup = opts.supportedGroups.some((g) => groups.has(g));
+        if (!userHasAtLeastOneSupportedGroup) {
+
+          res.status(403).json({error: "Unauthorized"});
+          return;
+        }
       }
-    } else {
-      // should be caught by API Gateway, just a sanity check.
-      res.status(401).header("WWW-Authenticate", "Bearer realm=\"Access to API\"").send();
     }
+    next();
   };
 }

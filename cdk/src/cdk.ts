@@ -138,6 +138,7 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     const cfnAuthorizer = new apigateway.CfnAuthorizer(this, id, {
       name: "CognitoAuthorizer",
       type: AuthorizationType.Cognito,
+
       identitySource: "method.request.header." + tokenHeaderName,
       restApiId: api.restApiId,
       providerArns: [userPool.userPoolArn]
@@ -159,10 +160,12 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
 
     const proxyResource = rootResource.addResource("{proxy+}");
 
-    proxyResource.addMethod("ANY", integration, {
+    const method = proxyResource.addMethod("ANY", integration, {
       authorizerId: cfnAuthorizer.authorizerId,
       authorizationType: AuthorizationType.Cognito,
     });
+    const cfnMethod = method.node.findChild("Resource") as apigateway.CfnMethod;
+    cfnMethod.addPropertyOverride("AuthorizationScopes", ["openid"]);
 
     // ------------------------------------------------------------------------
     // // add CORS support to all
@@ -171,14 +174,14 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     Utils.addCorsOptions(proxyResource, allowedOrigin);
     Utils.addCorsOptions(rootResource, allowedOrigin);
 
-
-
     // ========================================================================
     // Resource: Pre Token Generation function
     // ========================================================================
 
     // Purpose: map from a custom attribute mapped from SAML, e.g. {..., "custom:groups":"[a,b,c]", ...}
     //          to cognito:groups claim, e.g. {..., "cognito:groups":["a","b","c"], ...}
+    //          it can also optionally add roles and preferred_role claims
+
 
     // See also:
     // - https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html

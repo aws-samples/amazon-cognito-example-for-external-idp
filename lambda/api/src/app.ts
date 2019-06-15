@@ -27,7 +27,9 @@ app.use(json());
 app.use(urlencoded({extended: true}));
 
 app.use(eventContext());
-app.use(amazonCognitoAuthorizer(adminsGroupName, usersGroupName));
+app.use(amazonCognitoAuthorizer({
+  supportedGroups:[adminsGroupName, usersGroupName]
+}));
 
 /**
  * Ping
@@ -69,7 +71,6 @@ app.get("/pets/:petId", async (req: Request, res: Response) => {
   } else {
     res.status(403).json({error: `Unauthorized`});
   }
-
 });
 
 /**
@@ -99,6 +100,7 @@ app.post("/pets", async (req: Request, res: Response) => {
  * Update a pet
  */
 app.put("/pets/:petId", async (req: Request, res: Response) => {
+
   const updatedPet: Pet = req.body;
   const petId = req.params.petId;
 
@@ -130,15 +132,14 @@ app.put("/pets/:petId", async (req: Request, res: Response) => {
   } else {
     res.status(403).json({error: "Unauthorized"});
   }
-
 });
 
 /**
  * Delete a pet
  */
 app.delete("/pets/:petId", async (req: Request, res: Response) => {
-  const petId = req.params.petId;
 
+  const petId = req.params.petId;
   const pet = await storageService.getPet(petId);
 
   if (!pet) {
