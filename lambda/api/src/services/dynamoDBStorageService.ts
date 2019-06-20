@@ -1,4 +1,4 @@
-import AWS = require("aws-sdk");
+import aws = require("aws-sdk");
 import {DocumentClient} from "aws-sdk/lib/dynamodb/document_client";
 import {StorageService} from "./storageService";
 import {ScanInput} from "aws-sdk/clients/dynamodb";
@@ -8,8 +8,8 @@ export class DynamoDBStorageService implements StorageService {
 
   private readonly docClient: DocumentClient;
 
-  constructor(private readonly tableName: string, endpoint?: string) {
-    this.docClient = new AWS.DynamoDB.DocumentClient(endpoint ? {endpoint} : undefined);
+  constructor(private readonly tableName: string, private readonly endpoint?: string) {
+    this.docClient = new aws.DynamoDB.DocumentClient(endpoint ? {endpoint} : undefined);
   }
 
   public async getPet(id: string): Promise<Pet | null> {
@@ -20,12 +20,11 @@ export class DynamoDBStorageService implements StorageService {
         Key: {id},
         ConsistentRead: true,
       }).promise();
-
-      return data.Item as Pet;
-    } catch (ex) { // AWSError
-      if (ex.code === "ResourceNotFoundException") {
-        return null;
+      if (data && data.Item) {
+        return data.Item as Pet;
       }
+      return null; // return null vs undefined
+    } catch (ex) { // AWSError
       console.warn("Error getting entry", ex);
       throw ex;
     }

@@ -1,12 +1,13 @@
 // App.js
-import React, {ChangeEvent, Component, FormEvent} from 'react';
+import React, {ChangeEvent, Component, FormEvent, Fragment} from 'react';
 import './App.css';
 import Amplify, {Auth, Hub} from 'aws-amplify';
 import {CognitoUser} from '@aws-amplify/auth';
 import {AUTH_OPTS} from "../config";
 import {Pet} from "../model/pet";
-import {getClaims, getGroups} from "../amazonCognitoHelpers";
+import {User} from "../amazonCognitoHelpers";
 import {PetService} from "../service/petService";
+import {AuthService} from "../service/authService";
 
 Amplify.configure({Auth: AUTH_OPTS});
 
@@ -18,12 +19,13 @@ const numberFormat = new Intl.NumberFormat(undefined, {
 });
 
 interface AppProps {
-  petService: PetService
+  petService: PetService,
+  authService: AuthService
 }
 
 interface State {
   authState?: 'signedIn' | 'signIn' | 'loading';
-  user?: CognitoUser;
+  user?: User;
   pets?: Pet[];
   error?: any;
   message?: string;
@@ -34,12 +36,14 @@ interface State {
 class App extends Component<AppProps, State> {
 
   private petService: PetService;
+  private authService: AuthService;
 
   constructor(props: AppProps) {
 
     super(props);
 
     this.petService = props.petService;
+    this.authService = props.authService;
 
     this.state = {
       authState: 'loading',
@@ -47,11 +51,11 @@ class App extends Component<AppProps, State> {
   }
 
   async componentDidMount() {
-
+    console.log("componentDidMount");
     Hub.listen('auth', ({payload: {event, data}}) => {
       switch (event) {
         case 'signIn':
-          this.setState({authState: 'signedIn', user: data, error: null});
+          this.setState({authState: 'signedIn', user: new User(data), error: null});
           break;
         case 'signIn_failure':
           this.setState({authState: 'signIn', user: null, error: data});
@@ -62,21 +66,21 @@ class App extends Component<AppProps, State> {
     });
 
     try {
-      let user: CognitoUser = await Auth.currentAuthenticatedUser();
-      this.setState({authState: 'signedIn', user: user});
+      let cognitoUser: CognitoUser = await Auth.currentAuthenticatedUser();
+      this.setState({authState: 'signedIn', user: new User(cognitoUser)});
     } catch (e) {
       console.warn(e);
       this.setState({authState: 'signIn', user: null});
     }
+
   }
+
+
 
   async componentDidUpdate(prevProps: Readonly<any>, prevState: Readonly<State>) {
 
-    if (prevState.authState !== this.state.authState) {
-
-      if (this.state.authState === "signedIn") {
-        await this.getAllPets();
-      }
+    if (prevState.authState !== this.state.authState && this.state.authState === "signedIn") {
+      await this.getAllPets();
     }
   }
 
@@ -84,18 +88,15 @@ class App extends Component<AppProps, State> {
 
     const {authState, pets, user, error, selectedPet, message, loading}: Readonly<State> = this.state;
 
-    const claims = getClaims(user);
-
-    let username;
-
-    if (claims && claims.name) {
-      username = claims.name;
+    let username: string;
+    let groups: string[] = [];
+    if(user) {
+      // using first name for display
+      username = user.getClaims().name;
+      groups = user.getGroups();
     }
-
-    const groups: string[] = getGroups(claims);
-
     return (
-      <React.Fragment>
+      <Fragment>
         <nav className="navbar navbar-expand-md navbar-dark bg-dark">
 
           <a className="navbar-brand" href="/">Cognito + Amplify + React Demo</a>
@@ -121,14 +122,18 @@ class App extends Component<AppProps, State> {
 
               {authState === 'loading' && (<div>loading...</div>)}
               {authState === 'signIn' &&
-              <button className="btn btn-primary" onClick={() => Auth.federatedSignIn()}>Sign In / Sign Up</button>}
+              <Fragment>
+              <button className="btn btn-primary m-1" onClick={() => Auth.federatedSignIn({customProvider:"Okta"})}>Single Sign On</button>
+              <button className="btn btn-primary m-1" onClick={() => Auth.federatedSignIn()}>Sign In / Sign Up</button>
+              </Fragment>
+              }
               {authState === 'signedIn' &&
 
 
               <div className="nav-item dropdown">
                 <a href="#" className="nav-link dropdown-toggle" data-toggle="dropdown">{username}</a>
                 <div className="dropdown-menu dropdown-menu-right">
-                  <button className="dropdown-item btn btn-warning" onClick={() => this.signOut()}>Sign out</button>
+                  <button className="dropdown-item btn btn-warning" onClick={() => this.globalSignOut()}>Sign out</button>
                 </div>
               </div>
 
@@ -212,7 +217,7 @@ class App extends Component<AppProps, State> {
         </div>
 
 
-      </React.Fragment>
+      </Fragment>
     );
   }
 
@@ -282,9 +287,9 @@ class App extends Component<AppProps, State> {
     }
   }
 
-  async signOut() {
+  async globalSignOut() {
     try {
-      await Auth.signOut();
+      await this.authService.globalSignOut();
       this.setState({authState: 'signIn', pets: null, user: null});
     } catch (e) {
       console.log(e);

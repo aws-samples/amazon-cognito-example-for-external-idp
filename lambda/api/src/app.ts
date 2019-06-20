@@ -1,4 +1,5 @@
 import express = require("express");
+import aws = require("aws-sdk");
 import {Express, json, Request, Response, urlencoded} from "express";
 import cors from "cors";
 import {eventContext} from "aws-serverless-express/middleware";
@@ -7,17 +8,33 @@ import uuid4 from "uuid/v4";
 import {Pet} from "./model/pet";
 import {amazonCognitoAuthorizer} from "./services/amazonCognitoClaimsMiddleware";
 import {DynamoDBStorageService} from "./services/dynamoDBStorageService";
+import {DynamoDBTokenRevocationHandler} from "./dynamoDBTokenRevocationHandler";
 
-if (!process.env.TABLE_NAME) {
-  throw new Error("Required environment variable TABLE_NAME is missing");
+if (!process.env.ITEMS_TABLE_NAME) {
+  throw new Error("Required environment variable ITEMS_TABLE_NAME is missing");
+}
+
+if (!process.env.USER_POOL_ID) {
+  throw new Error("Required environment variable USER_POOL_ID is missing");
+}
+
+if (!process.env.ALLOWED_ORIGIN) {
+  throw new Error("Required environment variable ALLOWED_ORIGIN is missing");
 }
 
 export const app: Express = express();
 
 const adminsGroupName: string = process.env.ADMINS_GROUP_NAME || "pet-app-admins";
 const usersGroupName: string = process.env.USERS_GROUP_NAME || "pet-app-users";
-const allowedOrigin: string = process.env.ALLOWED_ORIGIN || "http://localhost:3000";
-const storageService = new DynamoDBStorageService(process.env.TABLE_NAME);
+const authorizationHeaderName: string = process.env.AUTHORIZATION_HEADER_NAME || "Authorization";
+const allowedOrigin: string = process.env.ALLOWED_ORIGIN;
+const userPoolId: string = process.env.USER_POOL_ID;
+const revokedTokensTableName: string | undefined = process.env.REVOKED_TOKENS_TABLE_NAME;
+const storageService = new DynamoDBStorageService(process.env.ITEMS_TABLE_NAME);
+const cognito = new aws.CognitoIdentityServiceProvider();
+
+const tokenRevocationHandler = revokedTokensTableName ?
+  new DynamoDBTokenRevocationHandler(revokedTokensTableName, authorizationHeaderName) : undefined;
 
 app.use(cors({
   credentials: false,
@@ -28,7 +45,8 @@ app.use(urlencoded({extended: true}));
 
 app.use(eventContext());
 app.use(amazonCognitoAuthorizer({
-  supportedGroups:[adminsGroupName, usersGroupName]
+  supportedGroups: [adminsGroupName, usersGroupName],
+  revokedTokenValidator: tokenRevocationHandler,
 }));
 
 /**
@@ -154,4 +172,15 @@ app.delete("/pets/:petId", async (req: Request, res: Response) => {
   } else {
     res.status(403).json({error: `Unauthorized`});
   }
+});
+
+app.post("/globalSignOut", async (req: Request, res: Response) => {
+  // this revokes the refresh token, and also the access token for any cognito API calls,
+  // however since we don't give the user any aws.cognito.signin.user.admin scope, users can't call that directly
+  // so we call the admin version of that API, and use a DDB table to mark the access / id tokens as revoked
+  await cognito.adminUserGlobalSignOut({Username: req.username, UserPoolId: userPoolId}).promise();
+  if (tokenRevocationHandler) {
+    await tokenRevocationHandler.revokeToken(req);
+  }
+  res.status(200).send();
 });

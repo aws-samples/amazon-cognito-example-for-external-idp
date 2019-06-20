@@ -82,6 +82,13 @@ const getGroups = (claims: ClaimsBase): Set<string> => {
   return new Set<string>();
 };
 
+export interface TokenRevocationHandler {
+
+  isTokenRevoked(req: Request): Promise<boolean>;
+
+  revokeToken(req: Request): Promise<void>;
+}
+
 /**
  * Creates a middleware that enriches the request object with:
  * - claims: Claims (JWT ID token claims)
@@ -101,12 +108,15 @@ const getGroups = (claims: ClaimsBase): Set<string> => {
 export function amazonCognitoAuthorizer(opts?: {
   supportedGroups?: string[],
   usernameClaimName?: string,
+  revokedTokenValidator?: TokenRevocationHandler,
+
 }): RequestHandler {
-  return (req: Request, res: Response, next: NextFunction): any => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<any> => {
 
     const claims = getClaims(req);
 
     if (claims) {
+
       req.claims = claims;
       if (opts && opts.usernameClaimName) {
         // if we were provided with the claim name to use as username
@@ -141,6 +151,13 @@ export function amazonCognitoAuthorizer(opts?: {
         if (!userHasAtLeastOneSupportedGroup) {
 
           res.status(403).json({error: "Unauthorized"});
+          return;
+        }
+      }
+      if (opts && opts.revokedTokenValidator) {
+        const isTokenRevoked = await opts.revokedTokenValidator.isTokenRevoked(req);
+        if (isTokenRevoked) {
+          res.status(401).json({error: "Token is revoked"});
           return;
         }
       }

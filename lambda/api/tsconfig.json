@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es2017",
+    "lib": ["es2018"],
+    "target": "es2018",
     "module": "commonjs",
     "outDir": "./dist",
     "strict": true,
@@ -11,9 +12,10 @@
     "types": [
       "node",
       "mocha",
-      "express",
+      "express"
     ],
     "esModuleInterop": true,
-    "inlineSourceMap": true
+    "inlineSourceMap": false,
+    "sourceMap": false
   }
 }

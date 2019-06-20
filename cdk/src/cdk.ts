@@ -3,6 +3,7 @@ import cdk = require("@aws-cdk/cdk");
 import dynamodb = require("@aws-cdk/aws-dynamodb");
 import lambda = require("@aws-cdk/aws-lambda");
 import cognito = require("@aws-cdk/aws-cognito");
+import iam = require("@aws-cdk/aws-iam");
 import {BillingMode, StreamViewType} from "@aws-cdk/aws-dynamodb";
 import "source-map-support/register";
 import {AuthorizationType} from "@aws-cdk/aws-apigateway";
@@ -14,6 +15,8 @@ import {CognitoIdPCustomResourceConstruct} from "./customResourceConstructs/cogn
 import {AttributeMappingType} from "aws-sdk/clients/cognitoidentityserviceprovider";
 import {Utils} from "./utils";
 import {Function, Runtime} from "@aws-cdk/aws-lambda";
+import {PolicyStatementEffect} from "@aws-cdk/aws-iam";
+import {URL} from "url";
 
 /**
  * Define a CloudFormation stack that creates a serverless application with
@@ -31,16 +34,21 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     const domain = Utils.getEnv("COGNITO_DOMAIN_NAME");
     const identityProviderName = Utils.getEnv("IDENTITY_PROVIDER_NAME");
     const identityProviderMetadataURL = Utils.getEnv("IDENTITY_PROVIDER_METADATA_URL");
+    const appUrl = Utils.getEnv("APP_URL");
+    // validate URL (throws if invalid URL
+    new URL(appUrl);
+
+    const callbackURL = appUrl + "/";
 
     const groupsAttributeName = Utils.getEnv("GROUPS_ATTRIBUTE_NAME", "groups");
-    const allowedOrigin = Utils.getEnv("ALLOWED_ORIGIN", "*");
+
     const adminsGroupName = Utils.getEnv("ADMINS_GROUP_NAME", "pet-app-admins");
-    const usersGroupName = Utils.getEnv("USERS_GROUP_NAME", "pet-app-admins");
+    const usersGroupName = Utils.getEnv("USERS_GROUP_NAME", "pet-app-users");
     const lambdaMemory = parseInt(Utils.getEnv("LAMBDA_MEMORY", "128"));
 
 
-    const nodeRuntime: Runtime = lambda.Runtime.NodeJS810;
-    const tokenHeaderName = "Authorization";
+    const nodeRuntime: Runtime = lambda.Runtime.NodeJS10x;
+    const authorizationHeaderName = "Authorization";
     const groupsAttributeClaimName = "custom:" + groupsAttributeName;
 
     // ========================================================================
@@ -77,11 +85,19 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     // - https://aws.amazon.com/dynamodb/
     // - https://docs.aws.amazon.com/cdk/api/latest/docs/aws-dynamodb-readme.html
 
-    const table = new dynamodb.Table(this, "Table", {
+    const itemsTable = new dynamodb.Table(this, "ItemsTable", {
       billingMode: BillingMode.PayPerRequest,
       sseEnabled: true,
       streamSpecification: StreamViewType.NewAndOldImages, // to enable global tables
       partitionKey: {name: "id", type: dynamodb.AttributeType.String}
+    });
+
+    const revokedTokensTable = new dynamodb.Table(this, "RevokedTokensTable", {
+      billingMode: BillingMode.PayPerRequest,
+      sseEnabled: true,
+      streamSpecification: StreamViewType.NewAndOldImages, // to enable global tables
+      partitionKey: {name: "token", type: dynamodb.AttributeType.String},
+      ttlAttributeName: "ttl",
     });
 
     // ========================================================================
@@ -97,19 +113,30 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     const apiFunction = new lambda.Function(this, "APIFunction", {
       runtime: nodeRuntime,
       handler: "index.handler",
-      code: lambda.Code.asset("../lambda/api/dist/packed"),
+      code: lambda.Code.asset("../lambda/api/dist/src"),
       timeout: 30,
       memorySize: lambdaMemory,
       environment: {
-        TABLE_NAME: table.tableName,
-        ALLOWED_ORIGIN: allowedOrigin,
+        ITEMS_TABLE_NAME: itemsTable.tableName,
+        REVOKED_TOKENS_TABLE_NAME: revokedTokensTable.tableName,
+        ALLOWED_ORIGIN: appUrl,
         ADMINS_GROUP_NAME: adminsGroupName,
-        USERS_GROUP_NAME: usersGroupName
+        USERS_GROUP_NAME: usersGroupName,
+        USER_POOL_ID: userPool.userPoolId,
+        AUTHORIZATION_HEADER_NAME: authorizationHeaderName,
       },
     });
 
-    // grant the lambda full access to the table
-    table.grantFullAccess(apiFunction.role!);
+    // grant the lambda full access to the tables (for a high level construct, we have a syntactic sugar way of doing it
+    itemsTable.grantReadWriteData(apiFunction.role!);
+    revokedTokensTable.grantReadWriteData(apiFunction.role!);
+
+    // for Cfn building blocks, we need to create the policy
+    // in here we allow us to do a global sign out from the backend, to avoid having to give users a stronger scope
+    apiFunction.addToRolePolicy(new iam.PolicyStatement(PolicyStatementEffect.Allow)
+      .addResource(userPool.userPoolArn)
+      .addAction("cognito-idp:AdminUserGlobalSignOut")
+    );
 
     // ========================================================================
     // Resource: Amazon API Gateway - API endpoints
@@ -139,7 +166,7 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
       name: "CognitoAuthorizer",
       type: AuthorizationType.Cognito,
 
-      identitySource: "method.request.header." + tokenHeaderName,
+      identitySource: "method.request.header." + authorizationHeaderName,
       restApiId: api.restApiId,
       providerArns: [userPool.userPoolArn]
     });
@@ -171,8 +198,8 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     // // add CORS support to all
     // ------------------------------------------------------------------------
 
-    Utils.addCorsOptions(proxyResource, allowedOrigin);
-    Utils.addCorsOptions(rootResource, allowedOrigin);
+    Utils.addCorsOptions(proxyResource, appUrl);
+    Utils.addCorsOptions(rootResource, appUrl);
 
     // ========================================================================
     // Resource: Pre Token Generation function
@@ -242,8 +269,8 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
       GenerateSecret: false,
       RefreshTokenValidity: 1,
       //TODO: add your app's prod URLs here
-      CallbackURLs: ["http://localhost:3000/"],
-      LogoutURLs: ["http://localhost:3000/"],
+      CallbackURLs: [callbackURL],
+      LogoutURLs: [callbackURL],
 
     }, userPool);
 
@@ -291,6 +318,11 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     new cdk.CfnOutput(this, "CognitoDomainOutput", {
       description: "Cognito Domain",
       value: cognitoDomain.domain
+    });
+
+    new cdk.CfnOutput(this, "LambdaFunctionName", {
+      description: "Lambda Function Name",
+      value: apiFunction.functionName
     });
   }
 }

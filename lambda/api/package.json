@@ -7,7 +7,9 @@
   "main": "index.js",
   "scripts": {
     "start": "ts-node src/local.ts",
-    "build": "tsc && webpack",
+    "build-webpack": "tsc && webpack",
+    "build": "tsc && copy-node-modules . dist/src",
+    "package": "build && cd dist/src && zip -r ../function.zip .",
     "watch": "tsc -w",
     "test": "mocha -r ts-node/register tests/**/*.test.ts",
     "testWithCoverage": "nyc -r lcov -e .ts -x \"*.test.ts\" mocha -r ts-node/register tests/**/*.test.ts && nyc report"
@@ -24,6 +26,7 @@
     "@types/uuid": "^3.4.4",
     "aws-sdk": "^2.474.0",
     "chai": "^4.2.0",
+    "copy-node-modules": "^1.1.1",
     "dynamodb-local": "0.0.29",
     "mocha": "^6.1.4",
     "nyc": "^14.1.1",

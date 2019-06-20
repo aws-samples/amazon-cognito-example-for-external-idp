@@ -4,9 +4,9 @@ import fs = require("fs");
 
 class GenerateConfig {
 
-  async generateConfig(stackName: string, filePath: string, constName: string) {
+  async generateConfig(stackName: string, stackRegion: string, filePath: string, constName: string) {
 
-    const outputs = await Utils.getStackOutputs(stackName);
+    const outputs = await Utils.getStackOutputs(stackName, stackRegion);
     const outputsByName = new Map<string, string>();
     for (let output of outputs) {
       outputsByName.set(output.OutputKey!, output.OutputValue!);
@@ -58,12 +58,16 @@ IdP Settings:
 }
 
 const stackName = process.argv[2];
-if(!stackName){
+if (!stackName) {
   throw new Error("stack name is required");
 }
-const filePath = process.argv[3];
-if(!stackName){
+const stackRegion = process.argv[3];
+if (!stackName) {
+  throw new Error("stack region is required");
+}
+const filePath = process.argv[4];
+if (!stackName) {
   throw new Error("file path is required");
 }
 
-new GenerateConfig().generateConfig(stackName, filePath, "autoGenConfigParams");
+new GenerateConfig().generateConfig(stackName, stackRegion, filePath, "autoGenConfigParams");

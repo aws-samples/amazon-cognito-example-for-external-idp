@@ -3,11 +3,12 @@ import ReactDOM from 'react-dom';
 import App from './App';
 import {PetService} from "../service/petService";
 import {Pet} from "../model/pet";
+import {AuthService} from "../service/authService";
 
 it('renders without crashing', () => {
   const div = document.createElement('div');
 
-  let abstractPetService = (new class implements PetService{
+  const abstractPetService = (new class implements PetService{
     deletePet(pet: Pet): Promise<void> {
       return undefined;
     }
@@ -20,8 +21,13 @@ it('renders without crashing', () => {
       //TODO: implement
       return undefined;
     }
-
   });
-  ReactDOM.render(<App petService={abstractPetService} />, div);
+
+  const abstractAuthService = (new class implements AuthService{
+    globalSignOut(): Promise<void> {
+      return undefined;
+    }
+  });
+  ReactDOM.render(<App petService={abstractPetService} authService={abstractAuthService} />, div);
   ReactDOM.unmountComponentAtNode(div);
 });
