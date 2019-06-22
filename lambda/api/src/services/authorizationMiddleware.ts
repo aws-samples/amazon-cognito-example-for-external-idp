@@ -123,9 +123,9 @@ export interface Opts {
   forceSignOutHandler?: ForceSignOutHandler;
 
   /**
-   * optional, if provided, will allow all requests to the provided routes
+   * optional, if provided, will allow all requests to the provided paths
    */
-  allowedRoutes?: string[];
+  allowedPaths?: string[];
 
   /**
    *  optional, which claim to use as username.
@@ -153,7 +153,7 @@ export interface Opts {
 export const authorizationMiddleware = (opts?: Opts): RequestHandler =>
   async (req: Request, res: Response, next: NextFunction): Promise<any> => {
 
-  if (opts && opts.allowedRoutes && opts.allowedRoutes.includes(req.route)) {
+  if (opts && opts.allowedPaths && opts.allowedPaths.includes(req.path)) {
     next();
     return;
   }

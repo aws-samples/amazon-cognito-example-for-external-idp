@@ -25,11 +25,20 @@ export abstract class HttpService {
     }
 
     if (!response.ok) {
+
       // our API returns objects of type {error:string} in case of an error
       let errorObject = await response.json();
       const message = errorObject.error;
       console.error(`statusCode: ${response.status}, errorMessage: ${message}`);
+
+      if(response.status === 401) {
+        // 401 means the user is not authenticated,
+        // this is for example a result of a forced sign out
+        // so we can clear the no longer working token (and require re-sign-in)
+        await Auth.signOut();
+      }
       throw new Error(message);
+
     }
     return response;
   }

@@ -52,6 +52,14 @@ describe("integration test", async () => {
     server.close();
   });
 
+  it("test get allowed paths with no auth", async () => {
+
+    const response: Response = await request("/", "GET");
+
+    expect(response.statusCode).to.equal(200);
+
+  });
+
   it("test get all pets as admin", async () => {
 
     const response: Response = await request("/pets", "GET", {
@@ -137,7 +145,7 @@ describe("integration test", async () => {
 
   });
 
-  const request = async (path: string, method: string, claims: Partial<Claims>, body?: object) => {
+  const request = async (path: string, method: string, claims: Partial<Claims> = {}, body?: object) => {
     const tokenBase64 = Buffer.from(JSON.stringify(claims)).toString("base64");
 
     const eventAndContext = {

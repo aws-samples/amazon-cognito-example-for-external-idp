@@ -9,7 +9,7 @@
     "start": "ts-node src/local.ts",
     "build-webpack": "tsc && webpack",
     "build": "tsc && copy-node-modules . dist/src",
-    "package": "build && cd dist/src && zip -r ../function.zip .",
+    "package": "cd dist/src && zip -r ../function.zip .",
     "watch": "tsc -w",
     "test": "mocha -r ts-node/register tests/**/*.test.ts",
     "testWithCoverage": "nyc -r lcov -e .ts -x \"*.test.ts\" mocha -r ts-node/register tests/**/*.test.ts && nyc report"

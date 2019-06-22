@@ -56,7 +56,7 @@ export class App {
       authorizationHeaderName: authorizationHeaderName,
       supportedGroups: [adminsGroupName, usersGroupName],
       forceSignOutHandler: forceSignOutHandler,
-      allowedRoutes: ["/"],
+      allowedPaths: ["/"],
     }));
 
     /**
