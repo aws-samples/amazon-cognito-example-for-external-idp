@@ -15,7 +15,7 @@
  *
  */
 
-import {Pet} from "../model/pet";
+import {Pet} from "../models/pet";
 
 /**
  * Persistent Storage Service

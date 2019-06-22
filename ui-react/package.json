@@ -29,7 +29,9 @@
     "not op_mini all"
   ],
   "devDependencies": {
+    "@types/chai": "^4.1.7",
     "@types/react": "^16.8.19",
-    "@types/react-dom": "^16.8.4"
+    "@types/react-dom": "^16.8.4",
+    "chai": "latest"
   }
 }

@@ -5,7 +5,7 @@ import Amplify, {Auth, Hub} from 'aws-amplify';
 import {CognitoUser} from '@aws-amplify/auth';
 import {AUTH_OPTS} from "../config";
 import {Pet} from "../model/pet";
-import {User} from "../amazonCognitoHelpers";
+import {User} from "../model/user";
 import {PetService} from "../service/petService";
 import {AuthService} from "../service/authService";
 
@@ -129,14 +129,12 @@ class App extends Component<AppProps, State> {
               }
               {authState === 'signedIn' &&
 
-
               <div className="nav-item dropdown">
                 <a href="#" className="nav-link dropdown-toggle" data-toggle="dropdown">{username}</a>
                 <div className="dropdown-menu dropdown-menu-right">
-                  <button className="dropdown-item btn btn-warning" onClick={() => this.globalSignOut()}>Sign out</button>
+                  <button className="dropdown-item btn btn-warning" onClick={() => this.signOut()}>Sign Out</button>
                 </div>
               </div>
-
               }
 
             </div>
@@ -287,10 +285,10 @@ class App extends Component<AppProps, State> {
     }
   }
 
-  async globalSignOut() {
+  async signOut() {
     try {
-      await this.authService.globalSignOut();
       this.setState({authState: 'signIn', pets: null, user: null});
+      await this.authService.forceSignOut();
     } catch (e) {
       console.log(e);
     }

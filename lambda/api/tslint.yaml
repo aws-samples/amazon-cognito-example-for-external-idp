@@ -9,6 +9,7 @@ rules:
   ordered-imports: false
   no-empty: false
   object-literal-key-quotes: false
+  object-literal-shorthand: false
 #
 #rules:
 #  max-line-length:

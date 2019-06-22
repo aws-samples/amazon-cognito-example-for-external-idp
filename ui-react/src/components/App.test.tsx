@@ -24,7 +24,7 @@ it('renders without crashing', () => {
   });
 
   const abstractAuthService = (new class implements AuthService{
-    globalSignOut(): Promise<void> {
+    forceSignOut(): Promise<void> {
       return undefined;
     }
   });

@@ -2,14 +2,12 @@ import aws = require("aws-sdk");
 import {DocumentClient} from "aws-sdk/lib/dynamodb/document_client";
 import {StorageService} from "./storageService";
 import {ScanInput} from "aws-sdk/clients/dynamodb";
-import {Pet} from "../model/pet";
+import {Pet} from "../models/pet";
 
 export class DynamoDBStorageService implements StorageService {
 
-  private readonly docClient: DocumentClient;
-
-  constructor(private readonly tableName: string, private readonly endpoint?: string) {
-    this.docClient = new aws.DynamoDB.DocumentClient(endpoint ? {endpoint} : undefined);
+  constructor(private readonly tableName: string,
+              private readonly docClient: DocumentClient = new aws.DynamoDB.DocumentClient()) {
   }
 
   public async getPet(id: string): Promise<Pet | null> {

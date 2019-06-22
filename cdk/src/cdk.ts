@@ -46,7 +46,6 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     const usersGroupName = Utils.getEnv("USERS_GROUP_NAME", "pet-app-users");
     const lambdaMemory = parseInt(Utils.getEnv("LAMBDA_MEMORY", "128"));
 
-
     const nodeRuntime: Runtime = lambda.Runtime.NodeJS10x;
     const authorizationHeaderName = "Authorization";
     const groupsAttributeClaimName = "custom:" + groupsAttributeName;
@@ -92,11 +91,11 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
       partitionKey: {name: "id", type: dynamodb.AttributeType.String}
     });
 
-    const revokedTokensTable = new dynamodb.Table(this, "RevokedTokensTable", {
+    const usersTable = new dynamodb.Table(this, "UsersTable", {
       billingMode: BillingMode.PayPerRequest,
       sseEnabled: true,
       streamSpecification: StreamViewType.NewAndOldImages, // to enable global tables
-      partitionKey: {name: "token", type: dynamodb.AttributeType.String},
+      partitionKey: {name: "username", type: dynamodb.AttributeType.String},
       ttlAttributeName: "ttl",
     });
 
@@ -118,7 +117,7 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
       memorySize: lambdaMemory,
       environment: {
         ITEMS_TABLE_NAME: itemsTable.tableName,
-        REVOKED_TOKENS_TABLE_NAME: revokedTokensTable.tableName,
+        USERS_TABLE_NAME: usersTable.tableName,
         ALLOWED_ORIGIN: appUrl,
         ADMINS_GROUP_NAME: adminsGroupName,
         USERS_GROUP_NAME: usersGroupName,
@@ -129,7 +128,7 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
 
     // grant the lambda full access to the tables (for a high level construct, we have a syntactic sugar way of doing it
     itemsTable.grantReadWriteData(apiFunction.role!);
-    revokedTokensTable.grantReadWriteData(apiFunction.role!);
+    usersTable.grantReadWriteData(apiFunction.role!);
 
     // for Cfn building blocks, we need to create the policy
     // in here we allow us to do a global sign out from the backend, to avoid having to give users a stronger scope
