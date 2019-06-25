@@ -84,8 +84,14 @@ const getClaimsFromToken = (token?: string): Claims | null => {
   if (!token) {
     return null;
   }
-  const base64decoded = Buffer.from(token.split(".")[1], "base64").toString("ascii");
-  return JSON.parse(base64decoded);
+  try {
+    const base64decoded = Buffer.from(token.split(".")[1], "base64").toString("ascii");
+    return JSON.parse(base64decoded);
+  } catch (e) {
+    console.error("Invalid JWT token", e);
+    // in case a malformed token was provided, we treat it as if non was provided, users will get a 401 in our case
+    return null;
+  }
 };
 
 /**
