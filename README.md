@@ -4,19 +4,19 @@
 
 
 This example can be used as a starting point for using Amazon Cognito together with an external IdP 
-(e.g. a SAML 2.0 based provider or a social login provider). 
+(e.g. a SAML 2.0/OIDC provider or a social login provider). 
 It shows how to use triggers in order to map IdP attributes 
 (e.g. LDAP group membership passed on the SAML response as an attribute) 
 to Amazon Cognito User Pools Groups and optionally also to IAM roles. 
 
 
 It contains all that is needed in order to create a serverless web application with 
-Amazon Cognito, Amazon API Gateway and AWS Lambda (with optionally an external IdP).
+Amazon Cognito, Amazon API Gateway, AWS Lambda and Amazon DynamoDB (with optionally an external IdP).
 
-It addresses fine grained role based access control and demonstrates how to associate users to roles/groups based 
+It handles fine-grained role-based access control and demonstrates how to associate users to roles/groups based 
 on mapped attributes from an external IdP or social login provider. 
 
-It is using TypeScript for frontend, backend and even the infrastructure. (Using [AWS CDK](https://github.com/awslabs/aws-cdk))
+It is using TypeScript for frontend, backend and infrastructure. (Using [AWS CDK](https://github.com/awslabs/aws-cdk))
  
 ## Modules
 
@@ -107,15 +107,30 @@ AWS Amplify can manage all aspects of a project, but since we used AWS CDK, we f
   
 ## Notes 
 
-- Do not add the `aws.cognito.signin.user.admin` scope, 
+- Do not add the `aws.cognito.signin.user.admin` scope, (not added by default)
     this will allow users to modify their own attributes directly with the access token. 
     Since the IdP is the source of truth, and we don't want users to change attributes 
     (especially those used for authorization) on their own, this scope should not be added. 
 
+# Getting Started
+
+## Setup 
+
+1. copy `env.sh.template` to `env.sh` (in .gitignore)
+2. set the values based on your environment  
+3. run `./deploy.sh` to build the project and deploy the stack 
+
+## Commands Summary 
+
+- `./synth.sh`  to display the generated CloudFormation script from the CDK code
+- `./build.sh`  to build all packages (including running tests)
+- `./diff.sh`   to show compare deployed stack with current state
+- `./deploy.sh` to build and deploy  
  
 ## IdP Configuration Instructions 
 
-- **Okta**: https://aws.amazon.com/premiumsupport/knowledge-center/cognito-okta-saml-identity-provider/
+- **Okta**: 
+  - https://aws.amazon.com/premiumsupport/knowledge-center/cognito-okta-saml-identity-provider/
 
 - **ADFS**: 
   - https://aws.amazon.com/blogs/mobile/building-adfs-federation-for-your-web-app-using-amazon-cognito-user-pools/
