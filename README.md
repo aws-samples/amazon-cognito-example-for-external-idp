@@ -2,7 +2,6 @@
 
 ## Overview
 
-
 This example can be used as a starting point for using Amazon Cognito together with an external IdP 
 (e.g. a SAML 2.0/OIDC provider or a social login provider). 
 It shows how to use triggers in order to map IdP attributes 
@@ -116,9 +115,12 @@ AWS Amplify can manage all aspects of a project, but since we used AWS CDK, we f
 
 ## Setup 
 
-1. copy `env.sh.template` to `env.sh` (in .gitignore)
-2. set the values based on your environment  
-3. run `./deploy.sh` to build the project and deploy the stack 
+1. clone or fork this repo 
+2. copy `env.sh.template` to `env.sh` (not recommended to be pushed to your git repo, it's in .gitignore as a protection)
+3. edit `env.sh` and set the values there based on your environment
+4. install CDK if not already installed: `$ npm i -g aws-cdk` (see [here](https://github.com/awslabs/aws-cdk#getting-started) for more details)
+5. run `$ cdk bootstrap` (only needed once, for more information see here [here](https://github.com/awslabs/aws-cdk/blob/master/packages/aws-cdk/README.md#cdk-bootstrap))
+6. run `./deploy.sh` to build the project and deploy the stack 
 
 ## Commands Summary 
 
@@ -131,6 +133,7 @@ AWS Amplify can manage all aspects of a project, but since we used AWS CDK, we f
 
 - **Okta**: 
   - https://aws.amazon.com/premiumsupport/knowledge-center/cognito-okta-saml-identity-provider/
+    NOTE: to avoid a circular "chicken and egg" dependency, create the Okta Application with placeholder values just to get the metadata XML, then after deploying, update in Okta for the correct values for the user pool.
 
 - **ADFS**: 
   - https://aws.amazon.com/blogs/mobile/building-adfs-federation-for-your-web-app-using-amazon-cognito-user-pools/
