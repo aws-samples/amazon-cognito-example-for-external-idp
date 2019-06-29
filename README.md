@@ -23,8 +23,6 @@ The example contains the following modules within these sub-folders:
 
 ### /cdk 
 
-CDK Toolkit CLI Installation: `npm install -g aws-cdk` 
-
 This module is using [AWS CDK](https://docs.aws.amazon.com/cdk/api/latest/) (in developer preview)
 
 CDK is a software development framework for defining cloud infrastructure in code and provisioning it through AWS CloudFormation.
