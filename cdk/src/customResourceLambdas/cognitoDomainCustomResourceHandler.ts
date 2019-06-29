@@ -61,21 +61,29 @@ export const handler = (new class extends CustomResourceHandler {
 
 
     let domain = createDomainRequest.Domain;
-    const describeUserPoolDomainResult = await cognitoIdP.describeUserPoolDomain({
-      Domain: domain,
-    }).promise();
-
-    if (describeUserPoolDomainResult.DomainDescription!.Domain) {
-
-      console.log("Domain exists, deleting:", describeUserPoolDomainResult.DomainDescription);
-
-      const deleteUserPoolDomainResponse = await cognitoIdP.deleteUserPoolDomain({
-        UserPoolId: userPoolId,
-        Domain: domain
+    try {
+      const describeUserPoolDomainResult = await cognitoIdP.describeUserPoolDomain({
+        Domain: domain,
       }).promise();
-      console.log("Domain deleted");
 
-      await this.waitForDomainToBeDeleted(domain);
+
+      if (describeUserPoolDomainResult.DomainDescription!.Domain) {
+
+        console.log("Domain exists, deleting:", describeUserPoolDomainResult.DomainDescription);
+
+        const deleteUserPoolDomainResponse = await cognitoIdP.deleteUserPoolDomain({
+          UserPoolId: userPoolId,
+          Domain: domain
+        }).promise();
+        console.log("Domain deleted");
+
+        await this.waitForDomainToBeDeleted(domain);
+      }
+    } catch (ex) {
+      // if already deleted, we can ignore, otherwise, rethrow
+      if (ex.code !== "ResourceNotFoundException") {
+        throw ex;
+      }
     }
 
     return this.generateReturn(createDomainRequest, userPoolId);
@@ -132,8 +140,10 @@ export const handler = (new class extends CustomResourceHandler {
             reject(new Error("Domain creation failed"));
           }
 
-        } catch (error) {
-          reject(error);
+        } catch (ex) {
+          if (ex.code !== "ResourceNotFoundException") {
+            reject(ex);
+          }
         }
 
       }, 1000);
@@ -160,9 +170,15 @@ export const handler = (new class extends CustomResourceHandler {
             reject(new Error("Domain deletion failed"));
           }
 
-        } catch (error) {
-          console.log("Error deleting domain", error);
-          reject(error);
+        } catch (ex) {
+          if (ex.code === "ResourceNotFoundException") {
+            // if already deleted, we can ignore
+            resolve();
+          } else {
+            console.log("Error deleting domain", ex);
+            reject(ex);
+          }
+
         }
 
       }, 1000);

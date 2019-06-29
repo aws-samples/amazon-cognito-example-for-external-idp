@@ -1,5 +1,5 @@
 import apigateway = require("@aws-cdk/aws-apigateway");
-import cdk = require("@aws-cdk/cdk");
+import cdk = require("@aws-cdk/core");
 import dynamodb = require("@aws-cdk/aws-dynamodb");
 import lambda = require("@aws-cdk/aws-lambda");
 import cognito = require("@aws-cdk/aws-cognito");
@@ -8,15 +8,16 @@ import {BillingMode, StreamViewType} from "@aws-cdk/aws-dynamodb";
 import "source-map-support/register";
 import {AuthorizationType} from "@aws-cdk/aws-apigateway";
 import {CognitoAppClientCustomResourceConstruct} from "./customResourceConstructs/cognitoAppClientCustomResourceConstruct";
-import {CfnUserPool} from "@aws-cdk/aws-cognito";
+import {CfnUserPool, SignInType, UserPool, UserPoolAttribute} from "@aws-cdk/aws-cognito";
 import {CognitoDomainCustomResourceConstruct} from "./customResourceConstructs/cognitoDomainCustomResourceConstruct";
 import {CognitoPreTokenGenerationResourceConstruct} from "./customResourceConstructs/cognitoPreTokenGenerationResourceConstruct";
 import {CognitoIdPCustomResourceConstruct} from "./customResourceConstructs/cognitoIdPCustomResourceConstruct";
 import {AttributeMappingType} from "aws-sdk/clients/cognitoidentityserviceprovider";
 import {Utils} from "./utils";
 import {Function, Runtime} from "@aws-cdk/aws-lambda";
-import {PolicyStatementEffect} from "@aws-cdk/aws-iam";
 import {URL} from "url";
+import {Duration} from "@aws-cdk/core";
+import {CognitoSAMLIdentityProviderDetails} from "./customResourceLambdas/cognitoIdPCustomResourceHandler";
 
 /**
  * Define a CloudFormation stack that creates a serverless application with
@@ -32,8 +33,9 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     // ========================================================================
 
     const domain = Utils.getEnv("COGNITO_DOMAIN_NAME");
-    const identityProviderName = Utils.getEnv("IDENTITY_PROVIDER_NAME");
-    const identityProviderMetadataURL = Utils.getEnv("IDENTITY_PROVIDER_METADATA_URL");
+    const identityProviderName = Utils.getEnv("IDENTITY_PROVIDER_NAME", "");
+
+    const identityProviderMetadataURLOrFile = Utils.getEnv("IDENTITY_PROVIDER_METADATA","");
     const appUrl = Utils.getEnv("APP_URL");
     // validate URL (throws if invalid URL
     new URL(appUrl);
@@ -46,7 +48,7 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     const usersGroupName = Utils.getEnv("USERS_GROUP_NAME", "pet-app-users");
     const lambdaMemory = parseInt(Utils.getEnv("LAMBDA_MEMORY", "128"));
 
-    const nodeRuntime: Runtime = lambda.Runtime.NodeJS10x;
+    const nodeRuntime: Runtime = lambda.Runtime.NODEJS_10_X;
     const authorizationHeaderName = "Authorization";
     const groupsAttributeClaimName = "custom:" + groupsAttributeName;
 
@@ -60,19 +62,24 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     // - https://aws.amazon.com/cognito/
     // - https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.CfnIdentityPool.html
 
-    const userPool: CfnUserPool = new cognito.CfnUserPool(this, id + "Pool", {
-      usernameAttributes: ["email"],
-      schema: [{
-        name: groupsAttributeName,
-        attributeDataType: "String",
-        mutable: true,
-        required: false,
-        stringAttributeConstraints: {
-          maxLength: "2000"
-        }
-      }],
-      autoVerifiedAttributes: ["email"]
+
+    // high level construct
+    const userPool: UserPool = new cognito.UserPool(this, id + "Pool", {
+      signInType: SignInType.EMAIL,
+      autoVerifiedAttributes: [UserPoolAttribute.EMAIL],
     });
+
+    // any properties that are not part of the high level construct can be added using this method
+    const userPoolCfn = userPool.node.defaultChild as CfnUserPool;
+    userPoolCfn.schema = [{
+      name: groupsAttributeName,
+      attributeDataType: "String",
+      mutable: true,
+      required: false,
+      stringAttributeConstraints: {
+        maxLength: "2000"
+      }
+    }];
 
     // ========================================================================
     // Resource: Amazon DynamoDB Table
@@ -85,18 +92,18 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     // - https://docs.aws.amazon.com/cdk/api/latest/docs/aws-dynamodb-readme.html
 
     const itemsTable = new dynamodb.Table(this, "ItemsTable", {
-      billingMode: BillingMode.PayPerRequest,
-      sseEnabled: true,
-      streamSpecification: StreamViewType.NewAndOldImages, // to enable global tables
-      partitionKey: {name: "id", type: dynamodb.AttributeType.String}
+      billingMode: BillingMode.PAY_PER_REQUEST,
+      serverSideEncryption: true,
+      stream: StreamViewType.NEW_AND_OLD_IMAGES, // to enable global tables
+      partitionKey: {name: "id", type: dynamodb.AttributeType.STRING}
     });
 
     const usersTable = new dynamodb.Table(this, "UsersTable", {
-      billingMode: BillingMode.PayPerRequest,
-      sseEnabled: true,
-      streamSpecification: StreamViewType.NewAndOldImages, // to enable global tables
-      partitionKey: {name: "username", type: dynamodb.AttributeType.String},
-      ttlAttributeName: "ttl",
+      billingMode: BillingMode.PAY_PER_REQUEST,
+      serverSideEncryption: true,
+      stream: StreamViewType.NEW_AND_OLD_IMAGES, // to enable global tables
+      partitionKey: {name: "username", type: dynamodb.AttributeType.STRING},
+      timeToLiveAttribute: "ttl",
     });
 
     // ========================================================================
@@ -113,7 +120,7 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
       runtime: nodeRuntime,
       handler: "index.handler",
       code: lambda.Code.asset("../lambda/api/dist/src"),
-      timeout: 30,
+      timeout: Duration.seconds(30),
       memorySize: lambdaMemory,
       environment: {
         ITEMS_TABLE_NAME: itemsTable.tableName,
@@ -121,7 +128,7 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
         ALLOWED_ORIGIN: appUrl,
         ADMINS_GROUP_NAME: adminsGroupName,
         USERS_GROUP_NAME: usersGroupName,
-        USER_POOL_ID: userPool.userPoolId,
+        USER_POOL_ID: userPoolCfn.ref,
         AUTHORIZATION_HEADER_NAME: authorizationHeaderName,
       },
     });
@@ -132,10 +139,13 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
 
     // for Cfn building blocks, we need to create the policy
     // in here we allow us to do a global sign out from the backend, to avoid having to give users a stronger scope
-    apiFunction.addToRolePolicy(new iam.PolicyStatement(PolicyStatementEffect.Allow)
-      .addResource(userPool.userPoolArn)
-      .addAction("cognito-idp:AdminUserGlobalSignOut")
+    apiFunction.addToRolePolicy(new iam.PolicyStatement(
+      {
+        resources: [userPool.userPoolArn],
+        actions: ["cognito-idp:AdminUserGlobalSignOut"]
+      })
     );
+
 
     // ========================================================================
     // Resource: Amazon API Gateway - API endpoints
@@ -163,7 +173,7 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
 
     const cfnAuthorizer = new apigateway.CfnAuthorizer(this, id, {
       name: "CognitoAuthorizer",
-      type: AuthorizationType.Cognito,
+      type: AuthorizationType.COGNITO,
 
       identitySource: "method.request.header." + authorizationHeaderName,
       restApiId: api.restApiId,
@@ -187,11 +197,19 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     const proxyResource = rootResource.addResource("{proxy+}");
 
     const method = proxyResource.addMethod("ANY", integration, {
-      authorizerId: cfnAuthorizer.authorizerId,
-      authorizationType: AuthorizationType.Cognito,
+
+      authorizer: {authorizerId: cfnAuthorizer.ref},
+      authorizationType: AuthorizationType.COGNITO,
+
     });
-    const cfnMethod = method.node.findChild("Resource") as apigateway.CfnMethod;
-    cfnMethod.addPropertyOverride("AuthorizationScopes", ["openid"]);
+
+    // these few lines demonstrates two things
+    // 1. how to add a low level CFN attribute in case it's not in the high level CDK construct
+    // 2. by adding a scope to authorizationScopes, API Gateway now expects an access token instead of an ID token
+
+    const cfnMethod = method.node.defaultChild as apigateway.CfnMethod;
+
+    cfnMethod.authorizationScopes = ["openid"];
 
     // ------------------------------------------------------------------------
     // // add CORS support to all
@@ -208,7 +226,6 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     //          to cognito:groups claim, e.g. {..., "cognito:groups":["a","b","c"], ...}
     //          it can also optionally add roles and preferred_role claims
 
-
     // See also:
     // - https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html
 
@@ -217,7 +234,7 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
       handler: "index.handler",
       code: lambda.Code.asset("../lambda/pretokengeneration/dist/src"),
       environment: {
-        GROUPS_ATTRIBUTE_NAME: groupsAttributeClaimName,
+        GROUPS_ATTRIBUTE_CLAIM_NAME: groupsAttributeClaimName,
       },
     });
 
@@ -240,15 +257,25 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     };
     attributeMapping[groupsAttributeClaimName] = "groups";
 
-    const cognitoIdPConstruct = new CognitoIdPCustomResourceConstruct(this, "CognitoIdP", {
-      ProviderName: identityProviderName,
-      ProviderDetails: {
-        IDPSignout: "true",
-        MetadataURL: identityProviderMetadataURL
-      },
-      ProviderType: "SAML",
-      AttributeMapping: attributeMapping
-    }, userPool);
+    const supportedIdentityProviders = ["COGNITO"];
+    let cognitoIdPConstruct = null;
+
+    if(identityProviderMetadataURLOrFile && identityProviderName) {
+      const providerDetails: CognitoSAMLIdentityProviderDetails = Utils.isURL(identityProviderMetadataURLOrFile) ? {
+        MetadataURL: identityProviderMetadataURLOrFile
+      } : {
+        MetadataFile: identityProviderMetadataURLOrFile
+      };
+
+      cognitoIdPConstruct = new CognitoIdPCustomResourceConstruct(this, "CognitoIdP", {
+        ProviderName: identityProviderName,
+        ProviderDetails: providerDetails,
+        ProviderType: "SAML",
+        AttributeMapping: attributeMapping
+      }, userPool);
+
+      supportedIdentityProviders.push(identityProviderName);
+    }
 
     // ========================================================================
     // Resource: Cognito App Client
@@ -259,8 +286,10 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     // See also:
     // - https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-client-apps.html
 
+
+
     const cognitoAppClient = new CognitoAppClientCustomResourceConstruct(this, "CognitoAppClient", {
-      SupportedIdentityProviders: ["COGNITO", identityProviderName],
+      SupportedIdentityProviders: supportedIdentityProviders,
       ClientName: "Web",
       AllowedOAuthFlowsUserPoolClient: true,
       AllowedOAuthFlows: ["code"],
@@ -274,7 +303,9 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     }, userPool);
 
     // we want to make sure we do things in the right order
-    cognitoAppClient.node.addDependency(cognitoIdPConstruct);
+    if(cognitoIdPConstruct) {
+      cognitoAppClient.node.addDependency(cognitoIdPConstruct);
+    }
 
     // ========================================================================
     // Resource: Cognito Auth Domain
@@ -301,7 +332,7 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, "UserPoolIdOutput", {
       description: "UserPool ID",
-      value: userPool.userPoolId
+      value: userPoolCfn.ref
     });
 
     new cdk.CfnOutput(this, "AppClientIdOutput", {

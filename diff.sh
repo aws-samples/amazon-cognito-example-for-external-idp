@@ -3,9 +3,9 @@
 set -e
 source ./env.sh
 
-cd ./cdk/
-echo "building cdk"
-npm run build
+./build.sh
 
-echo "generating CFN"
-cdk diff
+cd cdk
+echo "calculating diff"
+npm run cdk-diff
+cd -

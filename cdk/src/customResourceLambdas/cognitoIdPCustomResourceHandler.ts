@@ -10,40 +10,19 @@ import * as aws from "aws-sdk";
 import {CreateIdentityProviderRequest} from "aws-sdk/clients/cognitoidentityserviceprovider";
 
 const cognitoIdP = new aws.CognitoIdentityServiceProvider();
-/*
-{
-  "IdentityProvider": {
-    "UserPoolId": "...",
-    "ProviderName": "...",
-    "ProviderType": "SAML",
-    "ProviderDetails": {
-      "IDPSignout": "true",
-      "MetadataURL": "https://.../sso/saml/metadata",
-      "SSORedirectBindingURI": "https://.../sso/saml"
-    },
-    "AttributeMapping": {
-      "custom:groups": "groups",
-      "email": "email",
-      "family_name": "lastName",
-      "name": "firstName"
-    },
-    "IdpIdentifiers": [],
-    "LastModifiedDate": 1560376280.044,
-    "CreationDate": 1560371035.58
-  }
-}
-*/
 
-export interface CreateIdentityProviderRequestSAML extends CreateIdentityProviderRequest{
+export type CognitoSAMLIdentityProviderDetails = {
+  IDPSignout?: "true" | "false",
+} & ({ MetadataURL: string } | { MetadataFile: string });
+
+export interface CreateIdentityProviderRequestSAML extends CreateIdentityProviderRequest {
 
   ProviderType: "SAML",
 
-  ProviderDetails: {
-    IDPSignout: "true" | "false",
-    MetadataURL: string
-  };
+  ProviderDetails: CognitoSAMLIdentityProviderDetails;
 
 }
+
 export const handler = (new class extends CustomResourceHandler {
 
   // noinspection JSUnusedGlobalSymbols,JSUnusedLocalSymbols

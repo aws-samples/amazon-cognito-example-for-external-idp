@@ -10,9 +10,9 @@ export class User {
   }
 
   getClaims(): { [id: string]: any; } {
-    return this.cognitoUser && this.cognitoUser.getSignInUserSession()
+    return (this.cognitoUser && this.cognitoUser.getSignInUserSession()
       && this.cognitoUser.getSignInUserSession().isValid()
-      && this.cognitoUser.getSignInUserSession().getIdToken().decodePayload() || {};
+      && this.cognitoUser.getSignInUserSession().getIdToken().decodePayload()) || {};
   };
 }
 

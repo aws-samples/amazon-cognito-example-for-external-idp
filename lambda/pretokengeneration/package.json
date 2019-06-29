@@ -1,13 +1,19 @@
 {
   "name": "amazon-cognito-example-for-external-idp-lambda-pretokengeneration",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "Eran Medan",
   "license": "MIT-0",
-  "description": "",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/aws-samples/amazon-cognito-example-for-external-idp.git"
+  },
+  "description": "The trigger that maps groups from a single attribute (e.g. '[group1,group2]' to a cognito:groups array claim",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
+    "ts-node": "ts-node",
+    "build": "tsc -b",
     "watch": "tsc -w",
+    "clean": "tsc -b --clean",
     "test": "mocha -r ts-node/register tests/**/*.test.ts",
     "testWithCoverage": "nyc -r lcov -e .ts -x \"*.test.ts\" mocha -r ts-node/register tests/**/*.test.ts && nyc report"
   },
@@ -16,13 +22,13 @@
     "@types/aws-lambda": "^8.10.27",
     "@types/chai": "^4.1.7",
     "@types/mocha": "^5.2.7",
-    "@types/node": "^12.0.8",
+    "@types/node": "^12.0.10",
     "chai": "^4.2.0",
     "mocha": "^6.1.4",
     "nyc": "^14.1.1",
-    "ts-node": "^8.2.0",
-    "tslint": "^5.17.0",
-    "typescript": "^3.5.1"
+    "ts-node": "^8.3.0",
+    "tslint": "^5.18.0",
+    "typescript": "^3.5.2"
   },
   "dependencies": {}
 }

@@ -14,7 +14,6 @@ export type CognitoAppClientCustomResourceParams = Omit<CreateUserPoolClientRequ
 
 
 const cognitoIdP = new aws.CognitoIdentityServiceProvider();
-const region = aws.config.region!;
 
 export const handler = (new class extends CustomResourceHandler {
 

@@ -2,9 +2,9 @@
 
 set -e
 source ./env.sh
-cd ./cdk/
-echo "building cdk"
-npm run build
 
+./build.sh
+
+cd ./cdk/
 echo "generating CFN"
-cdk synth
+npm run cdk-synth

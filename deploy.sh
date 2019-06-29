@@ -3,15 +3,16 @@
 set -e
 source ./env.sh
 
+echo "building..."
+
 ./build.sh
 
-pushd ./cdk/
+echo "deploying..."
 
-echo "deploying"
-cdk deploy
+cd cdk && npm run cdk-deploy && cd -
 
-popd
+echo "generating config for react UI..."
 
-echo "generating config for react UI"
+./ui-react.sh
 
-./config-ui-react.sh
+

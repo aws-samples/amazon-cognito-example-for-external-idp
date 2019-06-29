@@ -1,31 +1,41 @@
 {
   "name": "amazon-cognito-example-for-external-idp-cdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "Eran Medan",
   "license": "MIT-0",
-  "bin": {
-    "cdk": "dist/cdk.js"
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/aws-samples/amazon-cognito-example-for-external-idp.git"
   },
+  "description": "The infrastructure for the demo",
   "scripts": {
-    "build": "tsc",
+    "ts-node": "ts-node",
+    "tsc": "tsc",
+    "build": "tsc -b",
     "watch": "tsc -w",
+    "clean": "tsc -b --clean",
     "cdk": "cdk",
-    "generate-config": "ts-node src/generateConfig.ts"
+    "cdk-synth": "cdk synth",
+    "cdk-diff": "cdk diff || true",
+    "cdk-deploy": "cdk deploy",
+    "cdk-bootstrap": "cdk bootstrap",
+    "generate-config": "ts-node ./src/generateConfig.ts"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.27",
-    "@types/node": "^12.0.8",
-    "aws-cdk": "^0.34.0",
-    "typescript": "^3.5.1"
+    "@types/node": "^12.0.10",
+    "aws-cdk": "^0.36.0",
+    "ts-node": "^8.3.0",
+    "typescript": "^3.5.2"
   },
   "dependencies": {
-    "aws-sdk": "^2.474.0",
-    "@aws-cdk/aws-apigateway": "^0.34.0",
-    "@aws-cdk/aws-cognito": "^0.34.0",
-    "@aws-cdk/aws-dynamodb": "^0.34.0",
-    "@aws-cdk/aws-lambda": "^0.34.0",
-    "@aws-cdk/aws-sam": "^0.34.0",
-    "@aws-cdk/cdk": "^0.34.0",
+    "aws-sdk": "^2.484.0",
+    "@aws-cdk/aws-apigateway": "^0.36.0",
+    "@aws-cdk/aws-cognito": "^0.36.0",
+    "@aws-cdk/aws-dynamodb": "^0.36.0",
+    "@aws-cdk/aws-lambda": "^0.36.0",
+    "@aws-cdk/aws-sam": "^0.36.0",
+    "@aws-cdk/cdk": "^0.36.0",
     "source-map-support": "^0.5.12"
   }
 }

@@ -43,8 +43,6 @@ describe("lambda handler", () => {
       response: {},
     });
 
-    console.log(result.response);
-
     expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.contain("custom:groups");
     // tslint:disable-next-line:max-line-length
     expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["test1", "test2"]);
@@ -69,8 +67,6 @@ describe("lambda handler", () => {
       response: {},
     });
 
-    console.log(result.response);
-
     expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.contain("custom:groups");
     // tslint:disable-next-line:max-line-length
     expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["test"]);
@@ -94,8 +90,6 @@ describe("lambda handler", () => {
       response: {},
     });
 
-    console.log(JSON.stringify(result.response, null, 2));
-
     expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.contain("custom:groups");
     // tslint:disable-next-line:max-line-length
     expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["test", "DemoAppAdmins", "DemoAppUsers"]);
@@ -117,8 +111,6 @@ describe("lambda handler", () => {
       },
       response: {},
     });
-
-    console.log(result.response);
 
     expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.be.empty;
     // tslint:disable-next-line:max-line-length
@@ -144,8 +136,6 @@ describe("lambda handler", () => {
       "response": {"claimsOverrideDetails": null}
     });
 
-    console.log(JSON.stringify(result.response, null, 2));
-
     // tslint:disable-next-line:max-line-length
     expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["DemoAppAdmins", "DemoAppUsers"]);
 
@@ -167,8 +157,6 @@ describe("lambda handler", () => {
       },
       "response": {"claimsOverrideDetails": null}
     });
-
-    console.log(JSON.stringify(result.response, null, 2));
 
     // tslint:disable-next-line:max-line-length
     expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["DemoAppUsers"]);

@@ -113,6 +113,38 @@ describe("integration test", async () => {
 
   });
 
+  it("test no relevant groups", async () => {
+
+    const response: Response = await request("/pets", "GET", {
+      username: user1,
+      token_use: "access",
+      "cognito:groups": ["other"]
+    });
+    expect(response.statusCode).to.equal(403);
+
+  });
+
+  it("test no groups", async () => {
+
+    const response: Response = await request("/pets", "GET", {
+      username: user1,
+      token_use: "access",
+      "cognito:groups": []
+    });
+    expect(response.statusCode).to.equal(403);
+
+  });
+
+  it("test null groups", async () => {
+
+    const response: Response = await request("/pets", "GET", {
+      username: user1,
+      token_use: "access"
+    });
+    expect(response.statusCode).to.equal(403);
+
+  });
+
   it("test force sign out", async () => {
 
     const iat = (Date.now() / 1000) - 1;

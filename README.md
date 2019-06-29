@@ -111,23 +111,57 @@ AWS Amplify can manage all aspects of a project, but since we used AWS CDK, we f
     Since the IdP is the source of truth, and we don't want users to change attributes 
     (especially those used for authorization) on their own, this scope should not be added. 
 
-# Getting Started
 
-## Setup 
+ 
+# Getting Started - Mac / Linux 
 
-1. clone or fork this repo 
-2. copy `env.sh.template` to `env.sh` (not recommended to be pushed to your git repo, it's in .gitignore as a protection)
-3. edit `env.sh` and set the values there based on your environment
-4. install CDK if not already installed: `$ npm i -g aws-cdk` (see [here](https://github.com/awslabs/aws-cdk#getting-started) for more details)
-5. run `$ cdk bootstrap` (only needed once, for more information see here [here](https://github.com/awslabs/aws-cdk/blob/master/packages/aws-cdk/README.md#cdk-bootstrap))
-6. run `./deploy.sh` to build the project and deploy the stack 
+## Installation
 
-## Commands Summary 
+1. Clone or fork this repo (e.g. `git clone git@github.com:aws-samples/amazon-cognito-example-for-external-idp.git`)
+2. Ensure you have the latest node and npm installed (https://nodejs.org/en/download/) 
+3. Run `./install.sh` which does the following:
+   - Installs all node dependencies (it runs `npm install` in all relevant sub-folders)
+   - Builds the project (runs `tsc -b` in each relevant sub-folder - tsc is the TypeScript compiler)
+   - Runs `cdk bootsrap` - which creates a stack named CDKToolkit (if it was not created already) that helps simplify managing assets.
+     For more information about assets see [here](https://docs.aws.amazon.com/cdk/latest/guide/assets.html)  
+4. Copy `env.sh.template` to `env.sh` (not recommended to be pushed to your git repo, it's in .gitignore as a protection)
+5. Edit `env.sh` and set the values there based on your environment
 
-- `./synth.sh`  to display the generated CloudFormation script from the CDK code
-- `./build.sh`  to build all packages (including running tests)
-- `./diff.sh`   to show compare deployed stack with current state
-- `./deploy.sh` to build and deploy  
+NOTE: CDK is installed locally to ensure the right version is used. 
+In order to install it globally for use in other projects, run: `$ npm i -g aws-cdk` (see [here](https://github.com/awslabs/aws-cdk#getting-started) for more details)
+ 
+## Deploying / Updating the Backend Stack
+
+- After installing. Run `./deploy.sh` to deploy the backend stack. (For the first time as well as after making changes)
+
+## Launching the UI
+
+### React 
+
+- `cd ui-react && npm start` to run the UI in http://localhost:3000  
+
+### Angular 
+
+Coming soon
+
+## Other Commands  
+ 
+- Run `./diff.sh`   to compare deployed stack with current state
+- Run `./synth.sh`  to display the generated CloudFormation script from the CDK code
+
+- Run `./test.sh`   to run all tests
+- Run `./build.sh`  to compile all packages 
+- Run `./clean.sh`  to clean compiled packages
+  
+ 
+# Getting Started - Windows 
+
+Windows command-line files will be coming soon, in the meantime you can use either of these solutions in order to run sh files 
+ 
+- Git BASH: https://gitforwindows.org/
+- Windows Subsystem for Linux: https://docs.microsoft.com/en-us/windows/wsl/install-win10
+- MinGW: http://www.mingw.org/
+- Cygwinhttps://www.cygwin.com/
  
 ## IdP Configuration Instructions 
 

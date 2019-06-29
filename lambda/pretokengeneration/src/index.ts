@@ -15,7 +15,7 @@ import {PreTokenGenerationEvent} from "./preTokenGenerationEvent";
  */
 export const handler = async (event: PreTokenGenerationEvent): Promise<PreTokenGenerationEvent> => {
 
-  const GROUPS_ATTRIBUTE_NAME = process.env.GROUPS_ATTRIBUTE_NAME || "custom:groups";
+  const GROUPS_ATTRIBUTE_NAME = process.env.GROUPS_ATTRIBUTE_CLAIM_NAME || "custom:groups";
 
   let ldapGroups = event.request.userAttributes[GROUPS_ATTRIBUTE_NAME];
 

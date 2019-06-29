@@ -1,6 +1,7 @@
 import * as aws from "aws-sdk";
 import {CloudFormation} from "aws-sdk";
 import apigateway = require("@aws-cdk/aws-apigateway");
+import {URL} from "url";
 
 export class Utils {
   static async getStackOutputs(stackName: string, stackRegion: string): Promise<CloudFormation.Output[]> {
@@ -13,7 +14,7 @@ export class Utils {
   static getEnv(variableName: string, defaultValue?: string) {
     const variable = process.env[variableName];
     if (!variable) {
-      if (defaultValue) {
+      if (defaultValue !== undefined) {
         return defaultValue;
       }
       throw new Error(`${variableName} environment variable must be defined`);
@@ -38,7 +39,7 @@ export class Utils {
           "method.response.header.Access-Control-Max-Age": "'7200'",
         },
       }],
-      passthroughBehavior: apigateway.PassthroughBehavior.Never,
+      passthroughBehavior: apigateway.PassthroughBehavior.NEVER,
       requestTemplates: {
         "application/json": "{\"statusCode\": 200}"
       },
@@ -54,6 +55,15 @@ export class Utils {
         },
       }]
     })
+  }
+
+  static isURL(identityProviderMetadataURLOrFile: string) {
+    try {
+      new URL(identityProviderMetadataURLOrFile);
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
 

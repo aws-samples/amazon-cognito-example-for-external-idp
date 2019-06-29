@@ -123,14 +123,14 @@ class App extends Component<AppProps, State> {
               {authState === 'loading' && (<div>loading...</div>)}
               {authState === 'signIn' &&
               <Fragment>
-              <button className="btn btn-primary m-1" onClick={() => Auth.federatedSignIn({customProvider:"Okta"})}>Single Sign On</button>
+              <button className="btn btn-primary m-1" onClick={() => Auth.federatedSignIn({customProvider: "IdP"})}>Single Sign On</button>
               <button className="btn btn-primary m-1" onClick={() => Auth.federatedSignIn()}>Sign In / Sign Up</button>
               </Fragment>
               }
               {authState === 'signedIn' &&
 
               <div className="nav-item dropdown">
-                <a href="#" className="nav-link dropdown-toggle" data-toggle="dropdown">{username}</a>
+                <button className="nav-link dropdown-toggle btn btn-link" data-toggle="dropdown">{username}</button>
                 <div className="dropdown-menu dropdown-menu-right">
                   <button className="dropdown-item btn btn-warning" onClick={() => this.signOut()}>Sign Out</button>
                 </div>
