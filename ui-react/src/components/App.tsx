@@ -55,6 +55,8 @@ class App extends Component<AppProps, State> {
     Hub.listen('auth', ({payload: {event, data}}) => {
       switch (event) {
         case 'signIn':
+          // workaround for FF bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1422334
+          window.location.hash = window.location.hash;
           this.setState({authState: 'signedIn', user: new User(data), error: null});
           break;
         case 'signIn_failure':
