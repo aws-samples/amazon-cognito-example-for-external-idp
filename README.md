@@ -60,20 +60,20 @@ In order to allow express.js to run in an AWS Lambda runtime, we include https:/
 
 - **local.ts**: this can be used to launch the app locally as a regular express.js app.
 
-- **services/amazonCognitoGroupsMiddleware.ts**: this is an example that both 
+- **services/authorizationMiddleware.ts**: this is an example express.js middleware that does the following: 
   1. Adds type information to the request for simple autocompletion of available request information passed from Amazon API Gateway to the lambda function 
   
   2. A convenient / syntactic sugar that makes the claims and Amazon Cognito User Pool group available on the request object. 
     e.g. `req.groups.has("admin-role")` will return true if the user is authenticated and is a member of group "admin-role"
-    and `const email = req.claims ? req.claims.email : null;` will store the email if the user is logged in and has an email claim in the JWT
+    and `const email = req.claims ? req.claims.email : null;` will get the user's email if the user is logged in and has an email claim in the JWT
 
 ### /lambda/pretokengeneration
 
 This is an [Amazon Cognito User Pools Trigger](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools-working-with-aws-lambda-triggers.html) 
 that allows to add/remove claims from the [JWT ID token](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-tokens-with-identity-providers.html#amazon-cognito-user-pools-using-the-id-token) before giving it to the user.
 
-It is using a trigger named [Pre Token Generation](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html)
-It allows to do the following 
+It is using a trigger named [Pre Token Generation](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html).
+It allows to do the following: 
 
 1. Add or remove claims (claims are user built in or custom attributes, e.g. `email` or `custom:customAttributeName`)
 2. Create or remove Groups (a special claim under the name `cognito:groups`)
@@ -97,10 +97,9 @@ AWS Amplify can manage all aspects of a project, but since we used AWS CDK, we f
 
 **Some notable files** 
 
-- **amazonCognitoHelpers.ts**: provide an example of how to get the token information (e.g. group membership) on the client side.
-  this can be used for hiding sections that the user has no permission for in any case. 
-  This is not used for enforcing authorization, this is done only in the backend (via [Amazon Cognito User Pools Authorizer](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-integrate-with-cognito.html)).
-  However it provides a nicer user experience where actions that the user will not be permitted to perform are not visible / grayed out for them.
+- **user.ts**: provide an example of how to get the token information (e.g. group membership) on the client side.
+  group membership information can be used for example for hiding/graying out sections that the user has no permission for. 
+  This is not used for enforcing authorization or validation of the token, but it provides a nicer user experience where actions that the user will not be permitted to perform are not visible / grayed out for them.
   
 ## Notes 
 
@@ -113,20 +112,29 @@ AWS Amplify can manage all aspects of a project, but since we used AWS CDK, we f
  
 # Getting Started - Mac / Linux 
 
+## Pre-requisites
+
+1. An AWS account https://aws.amazon.com/resources/create-account/ 
+2. AWS CLI https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html 
+3. Configure AWS CLI https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html 
+4. Ensure you have the latest node and npm installed https://nodejs.org/en/download/
+
 ## Installation
 
 1. Clone or fork this repo (e.g. `git clone git@github.com:aws-samples/amazon-cognito-example-for-external-idp.git`)
-2. Ensure you have the latest node and npm installed (https://nodejs.org/en/download/) 
-3. Run `./install.sh` which does the following:
+
+2. Run `./install.sh` which does the following:
    - Installs all node dependencies (it runs `npm install` in all relevant sub-folders)
    - Builds the project (runs `tsc -b` in each relevant sub-folder - tsc is the TypeScript compiler)
    - Runs `cdk bootsrap` - which creates a stack named CDKToolkit (if it was not created already) that helps simplify managing assets.
      For more information about assets see [here](https://docs.aws.amazon.com/cdk/latest/guide/assets.html)  
-4. Copy `env.sh.template` to `env.sh` (not recommended to be pushed to your git repo, it's in .gitignore as a protection)
-5. Edit `env.sh` and set the values there based on your environment
+3. Copy `env.sh.template` to `env.sh` (not recommended to be pushed to your git repo, it's in .gitignore as a protection)
+4. Edit `env.sh` and set the values there based on your environment
 
-NOTE: CDK is installed locally to ensure the right version is used. 
-In order to install it globally for use in other projects, run: `$ npm i -g aws-cdk` (see [here](https://github.com/awslabs/aws-cdk#getting-started) for more details)
+NOTES: 
+
+- If you are using a profile, either run `export AWS_PROFILE=<profilename>` before the above commands, or `AWS_PROFILE=<profilename> ./<command>.sh` 
+- CDK is installed locally to ensure the right version is used. In order to install it globally for use in other projects, run: `$ npm i -g aws-cdk` (see [here](https://github.com/awslabs/aws-cdk#getting-started) for more details)
  
 ## Deploying / Updating the Backend Stack
 
@@ -159,7 +167,7 @@ Windows command-line files will be coming soon, in the meantime you can use eith
 - Git BASH: https://gitforwindows.org/
 - Windows Subsystem for Linux: https://docs.microsoft.com/en-us/windows/wsl/install-win10
 - MinGW: http://www.mingw.org/
-- Cygwinhttps://www.cygwin.com/
+- Cygwin: https://www.cygwin.com/
  
 ## IdP Configuration Instructions 
 
@@ -170,6 +178,12 @@ Windows command-line files will be coming soon, in the meantime you can use eith
 - **ADFS**: 
   - https://aws.amazon.com/blogs/mobile/building-adfs-federation-for-your-web-app-using-amazon-cognito-user-pools/
   - https://aws.amazon.com/premiumsupport/knowledge-center/cognito-ad-fs-saml/
+
+## Related Resources 
+
+AWS re:Inforce 2019: Identity and Access Control for Custom Enterprise Applications (SDD412)
+- Video: https://www.youtube.com/watch?v=VZzx15IEj7Y&t=2270s
+- Slides: https://www.slideshare.net/AmazonWebServices/identity-and-access-control-for-custom-enterprise-applications-sdd412-aws-reinforce-2019
 
 ## License Summary
 
