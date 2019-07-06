@@ -23,19 +23,19 @@
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.27",
-    "@types/node": "^12.0.10",
-    "aws-cdk": "^0.36.0",
+    "@types/node": "^12.0.12",
+    "aws-cdk": "^0.37.0",
     "ts-node": "^8.3.0",
     "typescript": "^3.5.2"
   },
   "dependencies": {
-    "aws-sdk": "^2.484.0",
-    "@aws-cdk/aws-apigateway": "^0.36.2",
-    "@aws-cdk/aws-cognito": "^0.36.2",
-    "@aws-cdk/aws-dynamodb": "^0.36.2",
-    "@aws-cdk/aws-lambda": "^0.36.2",
-    "@aws-cdk/aws-sam": "^0.36.2",
-    "@aws-cdk/core": "^0.36.2",
+    "@aws-cdk/aws-apigateway": "^0.37.0",
+    "@aws-cdk/aws-cognito": "^0.37.0",
+    "@aws-cdk/aws-dynamodb": "^0.37.0",
+    "@aws-cdk/aws-lambda": "^0.37.0",
+    "@aws-cdk/aws-sam": "^0.37.0",
+    "@aws-cdk/core": "^0.37.0",
+    "aws-sdk": "^2.488.0",
     "source-map-support": "^0.5.12"
   }
 }
