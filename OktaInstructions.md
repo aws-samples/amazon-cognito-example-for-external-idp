@@ -45,15 +45,19 @@ This walkthrough will help guide you through creating a working Okta Application
 14. Select *unspecified* for **Name ID format**.
 15. Select *Okta username* for **Application username**.
 16. Under **Attribute Statements**, configure the following:
+
     Name | Name format | Value
     :---: | :---: | :---:
     email | Unspecified | user.email
     firstName | Unspecified | user.firstName
     lastName | Unspecified | user.lastName
+
 17. Under Group Attribute Statements, add the following:
+
     Name | Name format | Filter | value
     :---: | :---: | :---: | :---:
     groups | Unspecified | Starts with | pet-app
+
 
 ![SAML Settings](images/saml-settings.png)
 
