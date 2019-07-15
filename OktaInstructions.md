@@ -79,5 +79,3 @@ Here you can add your specific instruction on how to add the IdP to the Cognito 
    * Example: *MyTestAppPoolxxx-xxxxx*
 4. On the left-hand side under **Federation**, select **Identity Providers**. Then, select **SAML**. -->
 
-#
-> Made with ♥ by AWS
