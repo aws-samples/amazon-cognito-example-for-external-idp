@@ -76,7 +76,15 @@ export const handler = (new class extends CustomResourceHandler {
     if(userPool.Policies && userPool.Policies.PasswordPolicy) {
       const tempPasswordValidityDays = (userPool.Policies.PasswordPolicy as any)["UnusedAccountValidityDays"];
       if(tempPasswordValidityDays) {
-        userPool.Policies.PasswordPolicy["TemporaryPasswordValidityDays"] = tempPasswordValidityDays;
+        userPool.Policies.PasswordPolicy.TemporaryPasswordValidityDays = tempPasswordValidityDays;
+        delete (userPool.Policies.PasswordPolicy as any)["UnusedAccountValidityDays"];
+      }
+    }
+
+    if(userPool.AdminCreateUserConfig) {
+      const tempPasswordValidityDays = userPool.AdminCreateUserConfig.UnusedAccountValidityDays;
+      if(tempPasswordValidityDays) {
+        delete userPool.AdminCreateUserConfig.UnusedAccountValidityDays;
       }
     }
 
