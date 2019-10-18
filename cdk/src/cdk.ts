@@ -7,17 +7,12 @@ import iam = require("@aws-cdk/aws-iam");
 import {BillingMode, StreamViewType} from "@aws-cdk/aws-dynamodb";
 import "source-map-support/register";
 import {AuthorizationType} from "@aws-cdk/aws-apigateway";
-import {CognitoAppClientCustomResourceConstruct} from "./customResourceConstructs/cognitoAppClientCustomResourceConstruct";
-import {CfnUserPool, SignInType, UserPool, UserPoolAttribute} from "@aws-cdk/aws-cognito";
-import {CognitoDomainCustomResourceConstruct} from "./customResourceConstructs/cognitoDomainCustomResourceConstruct";
-import {CognitoPreTokenGenerationResourceConstruct} from "./customResourceConstructs/cognitoPreTokenGenerationResourceConstruct";
-import {CognitoIdPCustomResourceConstruct} from "./customResourceConstructs/cognitoIdPCustomResourceConstruct";
+import {CfnUserPool, SignInType, UserPool, UserPoolAttribute, CfnUserPoolIdentityProvider} from "@aws-cdk/aws-cognito";
 import {AttributeMappingType} from "aws-sdk/clients/cognitoidentityserviceprovider";
 import {Utils} from "./utils";
 import {Function, Runtime} from "@aws-cdk/aws-lambda";
 import {URL} from "url";
 import {Duration} from "@aws-cdk/core";
-import {CognitoSAMLIdentityProviderDetails} from "./customResourceLambdas/cognitoIdPCustomResourceHandler";
 
 /**
  * Define a CloudFormation stack that creates a serverless application with
@@ -43,14 +38,32 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     const callbackURL = appUrl + "/";
 
     const groupsAttributeName = Utils.getEnv("GROUPS_ATTRIBUTE_NAME", "groups");
-
     const adminsGroupName = Utils.getEnv("ADMINS_GROUP_NAME", "pet-app-admins");
     const usersGroupName = Utils.getEnv("USERS_GROUP_NAME", "pet-app-users");
     const lambdaMemory = parseInt(Utils.getEnv("LAMBDA_MEMORY", "128"));
-
     const nodeRuntime: Runtime = lambda.Runtime.NODEJS_10_X;
     const authorizationHeaderName = "Authorization";
     const groupsAttributeClaimName = "custom:" + groupsAttributeName;
+
+    // ========================================================================
+    // Resource: Pre Token Generation function
+    // ========================================================================
+
+    // Purpose: map from a custom attribute mapped from SAML, e.g. {..., "custom:groups":"[a,b,c]", ...}
+    //          to cognito:groups claim, e.g. {..., "cognito:groups":["a","b","c"], ...}
+    //          it can also optionally add roles and preferred_role claims
+
+    // See also:
+    // - https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html
+
+    const preTokenGeneration: Function = new lambda.Function(this, "PreTokenGeneration", {
+      runtime: nodeRuntime,
+      handler: "index.handler",
+      code: lambda.Code.fromAsset("../lambda/pretokengeneration/dist/src"),
+      environment: {
+        GROUPS_ATTRIBUTE_CLAIM_NAME: groupsAttributeClaimName,
+      },
+    });
 
     // ========================================================================
     // Resource: Amazon Cognito User Pool
@@ -67,6 +80,7 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     const userPool: UserPool = new cognito.UserPool(this, id + "Pool", {
       signInType: SignInType.EMAIL,
       autoVerifiedAttributes: [UserPoolAttribute.EMAIL],
+      lambdaTriggers: {preTokenGeneration: preTokenGeneration}
     });
 
     // any properties that are not part of the high level construct can be added using this method
@@ -94,14 +108,14 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     const itemsTable = new dynamodb.Table(this, "ItemsTable", {
       billingMode: BillingMode.PAY_PER_REQUEST,
       serverSideEncryption: true,
-      stream: StreamViewType.NEW_AND_OLD_IMAGES, // to enable global tables
+      stream: StreamViewType.NEW_AND_OLD_IMAGES,
       partitionKey: {name: "id", type: dynamodb.AttributeType.STRING}
     });
 
     const usersTable = new dynamodb.Table(this, "UsersTable", {
       billingMode: BillingMode.PAY_PER_REQUEST,
       serverSideEncryption: true,
-      stream: StreamViewType.NEW_AND_OLD_IMAGES, // to enable global tables
+      stream: StreamViewType.NEW_AND_OLD_IMAGES,
       partitionKey: {name: "username", type: dynamodb.AttributeType.STRING},
       timeToLiveAttribute: "ttl",
     });
@@ -212,33 +226,11 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     cfnMethod.authorizationScopes = ["openid"];
 
     // ------------------------------------------------------------------------
-    // // add CORS support to all
+    // Add CORS support to all
     // ------------------------------------------------------------------------
 
     Utils.addCorsOptions(proxyResource, appUrl);
     Utils.addCorsOptions(rootResource, appUrl);
-
-    // ========================================================================
-    // Resource: Pre Token Generation function
-    // ========================================================================
-
-    // Purpose: map from a custom attribute mapped from SAML, e.g. {..., "custom:groups":"[a,b,c]", ...}
-    //          to cognito:groups claim, e.g. {..., "cognito:groups":["a","b","c"], ...}
-    //          it can also optionally add roles and preferred_role claims
-
-    // See also:
-    // - https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html
-
-    const preTokenGeneration: Function = new lambda.Function(this, "PreTokenGeneration", {
-      runtime: nodeRuntime,
-      handler: "index.handler",
-      code: lambda.Code.asset("../lambda/pretokengeneration/dist/src"),
-      environment: {
-        GROUPS_ATTRIBUTE_CLAIM_NAME: groupsAttributeClaimName,
-      },
-    });
-
-    new CognitoPreTokenGenerationResourceConstruct(this, "CognitoPreTokenGen", userPool, preTokenGeneration);
 
     // ========================================================================
     // Resource: Identity Provider Settings
@@ -258,21 +250,23 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     attributeMapping[groupsAttributeClaimName] = "groups";
 
     const supportedIdentityProviders = ["COGNITO"];
-    let cognitoIdPConstruct = null;
+    let cognitoIdp: CfnUserPoolIdentityProvider | undefined = undefined;
 
     if(identityProviderMetadataURLOrFile && identityProviderName) {
-      const providerDetails: CognitoSAMLIdentityProviderDetails = Utils.isURL(identityProviderMetadataURLOrFile) ? {
+
+      const providerDetails = Utils.isURL(identityProviderMetadataURLOrFile) ? {
         MetadataURL: identityProviderMetadataURLOrFile
       } : {
         MetadataFile: identityProviderMetadataURLOrFile
       };
 
-      cognitoIdPConstruct = new CognitoIdPCustomResourceConstruct(this, "CognitoIdP", {
-        ProviderName: identityProviderName,
-        ProviderDetails: providerDetails,
-        ProviderType: "SAML",
-        AttributeMapping: attributeMapping
-      }, userPool);
+      cognitoIdp = new cognito.CfnUserPoolIdentityProvider(this, "CognitoIdP", {
+        providerName: identityProviderName,
+        providerDetails: providerDetails,
+        providerType: "SAML",
+        attributeMapping: attributeMapping,
+        userPoolId: userPool.userPoolId
+      });
 
       supportedIdentityProviders.push(identityProviderName);
     }
@@ -286,25 +280,23 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     // See also:
     // - https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-client-apps.html
 
-
-
-    const cognitoAppClient = new CognitoAppClientCustomResourceConstruct(this, "CognitoAppClient", {
-      SupportedIdentityProviders: supportedIdentityProviders,
-      ClientName: "Web",
-      AllowedOAuthFlowsUserPoolClient: true,
-      AllowedOAuthFlows: ["code"],
-      AllowedOAuthScopes: ["phone", "email", "openid", "profile"],
-      GenerateSecret: false,
-      RefreshTokenValidity: 1,
+    const cfnUserPoolClient = new cognito.CfnUserPoolClient(this, "CognitoAppClient", {
+      supportedIdentityProviders: supportedIdentityProviders,
+      clientName: "Web",
+      allowedOAuthFlowsUserPoolClient: true,
+      allowedOAuthFlows: ["code"],
+      allowedOAuthScopes: ["phone", "email", "openid", "profile"],
+      generateSecret: false,
+      refreshTokenValidity: 1,
       //TODO: add your app's prod URLs here
-      CallbackURLs: [callbackURL],
-      LogoutURLs: [callbackURL],
-
-    }, userPool);
+      callbackUrLs: [callbackURL],
+      logoutUrLs: [callbackURL],
+      userPoolId: userPool.userPoolId
+    });
 
     // we want to make sure we do things in the right order
-    if(cognitoIdPConstruct) {
-      cognitoAppClient.node.addDependency(cognitoIdPConstruct);
+    if(cognitoIdp) {
+      cfnUserPoolClient.node.addDependency(cognitoIdp);
     }
 
     // ========================================================================
@@ -316,9 +308,10 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     // See also:
     // https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-assign-domain.html
 
-    const cognitoDomain = new CognitoDomainCustomResourceConstruct(this, "CognitoDomain", {
-      Domain: domain,
-    }, userPool);
+    const cfnUserPoolDomain = new cognito.CfnUserPoolDomain(this, "CognitoDomain", {
+      domain: domain,
+      userPoolId: userPool.userPoolId
+    });
 
     // ========================================================================
     // Stack Outputs
@@ -332,22 +325,22 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, "UserPoolIdOutput", {
       description: "UserPool ID",
-      value: userPoolCfn.ref
+      value: userPool.userPoolId
     });
 
     new cdk.CfnOutput(this, "AppClientIdOutput", {
       description: "App Client ID",
-      value: cognitoAppClient.appClientId
+      value: cfnUserPoolClient.ref
     });
 
     new cdk.CfnOutput(this, "RegionOutput", {
       description: "Region",
-      value: cognitoDomain.region
+      value: this.region
     });
 
     new cdk.CfnOutput(this, "CognitoDomainOutput", {
       description: "Cognito Domain",
-      value: cognitoDomain.domain
+      value: cfnUserPoolDomain.domain
     });
 
     new cdk.CfnOutput(this, "LambdaFunctionName", {
@@ -365,9 +358,9 @@ const stackName = Utils.getEnv("STACK_NAME");
 const stackAccount = Utils.getEnv("STACK_ACCOUNT");
 const stackRegion = Utils.getEnv("STACK_REGION");
 
-
 // The AWS CDK team recommends that you explicitly set your account and region using the env property on a stack when
 // you deploy stacks to production.
 // see https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html
 
-new AmazonCognitoIdPExampleStack(app, stackName, {env: {region: stackRegion, account: stackAccount}});
+const stack = new AmazonCognitoIdPExampleStack(app, stackName, {env: {region: stackRegion, account: stackAccount}});
+stack.templateOptions.transforms = ["AWS::Serverless-2016-10-31"];
