@@ -122,14 +122,14 @@ AWS Amplify can manage all aspects of a project, but since we used AWS CDK, we f
 ## Installation
 
 1. Clone or fork this repo (e.g. `git clone git@github.com:aws-samples/amazon-cognito-example-for-external-idp.git`)
-
-2. Run `./install.sh` which does the following:
+2. Copy `env.sh.template` to `env.sh` (not recommended to be pushed to your git repo, it's in .gitignore as a protection)
+3. Edit `env.sh` and set the values there based on your environment
+4. Run `./install.sh` which does the following:
    - Installs all node dependencies (it runs `npm install` in all relevant sub-folders)
    - Builds the project (runs `tsc -b` in each relevant sub-folder - tsc is the TypeScript compiler)
    - Runs `cdk bootsrap` - which creates a stack named CDKToolkit (if it was not created already) that helps simplify managing assets.
      For more information about assets see [here](https://docs.aws.amazon.com/cdk/latest/guide/assets.html)  
-3. Copy `env.sh.template` to `env.sh` (not recommended to be pushed to your git repo, it's in .gitignore as a protection)
-4. Edit `env.sh` and set the values there based on your environment
+
 
 NOTES: 
 
