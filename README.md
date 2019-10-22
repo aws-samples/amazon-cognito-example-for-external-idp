@@ -61,7 +61,7 @@ In order to allow express.js to run in an AWS Lambda runtime, we include https:/
 - **local.ts**: this can be used to launch the app locally as a regular express.js app.
 
 - **services/authorizationMiddleware.ts**: this is an example express.js middleware that does the following: 
-  1. Adds type information to the request for simple autocompletion of available request information passed from Amazon API Gateway to the lambda function 
+  1. Adds type information to the request for simple auto-completion of available request information passed from Amazon API Gateway to the lambda function 
   
   2. A convenient / syntactic sugar that makes the claims and Amazon Cognito User Pool group available on the request object. 
     e.g. `req.groups.has("admin-role")` will return true if the user is authenticated and is a member of group "admin-role"
@@ -103,7 +103,7 @@ AWS Amplify can manage all aspects of a project, but since we used AWS CDK, we f
   
 ### /ui-angular
 
-A simple Angular frontend, similiar to the React example 
+A simple Angular frontend, similar to the React example 
 
 ## Notes 
 
