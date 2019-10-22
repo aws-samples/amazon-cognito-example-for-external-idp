@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, NgZone, OnInit} from '@angular/core';
 import {AmplifyService} from 'aws-amplify-angular';
 import Amplify, {API, Auth} from 'aws-amplify';
 import Axios from 'axios';
@@ -6,7 +6,6 @@ import {User} from '../../../ui-react/src/model/user';
 import amplifyConfig from '../../../ui-react/src/config/amplifyConfig';
 import {Pet} from '../../../ui-react/src/model/pet';
 import {HttpAPIService} from '../../../ui-react/src/service/APIService';
-import {wrapWithCurrentZone} from 'zone.js/lib/common/utils';
 
 // create-react-app doesn't allow importing outside of the src folder (without some workarounds),
 // but Angular doesn't have this restriction, so for staying DRY
@@ -51,7 +50,8 @@ export class AppComponent implements OnInit {
   };
 
   constructor(private amplifyService: AmplifyService,
-              private apiService: HttpAPIService) {
+              private apiService: HttpAPIService,
+              private zone: NgZone) {
   }
 
   // ========================================================================
@@ -176,29 +176,43 @@ export class AppComponent implements OnInit {
     this.amplifyService.authStateChange$.subscribe(successHandler, errorHandler);
   }
 
-  private getAuthSuccessHandler() {
-    // wrapWithCurrentZone due to https://github.com/angular/angular/issues/10208#issuecomment-234749786
-    return wrapWithCurrentZone(async authState => {
-      switch (authState.state) {
-        case 'signIn':
-        case 'cognitoHostedUI':
-          await this.onLoad();
-          // workaround for FF bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1422334
-          window.location.hash = window.location.hash;
-          break;
-        case 'signOut':
-          this.model.user = null;
-          break;
-      }
-    }, 'successHandler');
+  private getAuthSuccessHandler(): (authState) => Promise<void> {
+
+    return async (authState) => {
+
+      // ensuring the code runs in the right angular zone
+      // - https://github.com/angular/angular/issues/10208#issuecomment-234749786
+      // - https://github.com/angular/zone.js/issues/830
+
+      await this.zone.run(async () => {
+        // noinspection JSRedundantSwitchStatement
+        switch (authState.state) {
+          case 'cognitoHostedUI':
+            await this.onLoad();
+            // workaround for FF bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1422334
+            // noinspection SillyAssignmentJS
+            window.location.hash = window.location.hash;
+            break;
+          default:
+            break;
+        }
+      });
+    };
+
   }
 
   private getAuthErrorHandler() {
-    // wrapWithCurrentZone due to https://github.com/angular/angular/issues/10208#issuecomment-234749786
-    return wrapWithCurrentZone(error => {
-      this.model.user = null;
-      console.warn(error);
-    }, 'errorHandler');
+
+    return (error) => {
+      // ensuring the code runs in the right angular zone
+      // - https://github.com/angular/angular/issues/10208#issuecomment-234749786
+      // - https://github.com/angular/zone.js/issues/830
+
+      this.zone.run( () => {
+        this.model.user = null;
+        console.warn(error);
+      });
+    };
   }
 
   private registerLoadingIndicator() {

@@ -19,7 +19,7 @@ interface AppProps {
 }
 
 export interface State {
-  authState?: 'signedIn' | 'notSignedIn' | 'loading';
+  authState?: 'signedIn' | 'signedOut' | 'loading';
   user?: User;
   pets?: Pet[];
   error?: any;
@@ -47,7 +47,6 @@ class App extends Component<AppProps, State> {
     console.log("componentDidMount");
     Hub.listen('auth', async ({payload: {event, data}}) => {
       switch (event) {
-        case 'signIn':
         case 'cognitoHostedUI':
           let user = await this.getUser();
           // workaround for FF bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1422334
@@ -56,9 +55,8 @@ class App extends Component<AppProps, State> {
           window.location.hash = window.location.hash;
           this.setState({authState: 'signedIn', user: user});
           break;
-        case 'signIn_failure':
         case 'cognitoHostedUI_failure':
-          this.setState({authState: 'notSignedIn', user: null, error: data});
+          this.setState({authState: 'signedOut', user: null, error: data});
           break;
         default:
           break;
@@ -70,7 +68,7 @@ class App extends Component<AppProps, State> {
       this.setState({authState: 'signedIn', user: user});
     } catch (e) {
       console.warn(e);
-      this.setState({authState: 'notSignedIn', user: null});
+      this.setState({authState: 'signedOut', user: null});
     }
   }
 
@@ -122,7 +120,7 @@ class App extends Component<AppProps, State> {
 
 
               {authState === 'loading' && (<div>loading...</div>)}
-              {authState === 'notSignedIn' &&
+              {authState === 'signedOut' &&
               <Fragment>
               <button className="btn btn-primary m-1" onClick={() => Auth.federatedSignIn({customProvider: "IdP"})}>Single Sign On</button>
               <button className="btn btn-primary m-1" onClick={() => Auth.federatedSignIn()}>Sign In / Sign Up</button>
@@ -150,7 +148,7 @@ class App extends Component<AppProps, State> {
           {message &&
           <div className="alert alert-info" onClick={() => this.setState({message: null})}>{message.toString()}</div>}
 
-          {authState === 'notSignedIn' && <div className="alert alert-info">Please sign in</div>}
+          {authState === 'signedOut' && <div className="alert alert-info">Please sign in</div>}
 
           {authState === 'signedIn' && <div className="container">
             {pets &&
@@ -288,7 +286,7 @@ class App extends Component<AppProps, State> {
 
   async signOut() {
     try {
-      this.setState({authState: 'notSignedIn', pets: null, user: null});
+      this.setState({authState: 'signedOut', pets: null, user: null});
       await this.apiService.forceSignOut();
     } catch (e) {
       console.log(e);
