@@ -101,6 +101,10 @@ AWS Amplify can manage all aspects of a project, but since we used AWS CDK, we f
   group membership information can be used for example for hiding/graying out sections that the user has no permission for. 
   This is not used for enforcing authorization or validation of the token, but it provides a nicer user experience where actions that the user will not be permitted to perform are not visible / grayed out for them.
   
+### /ui-angular
+
+A simple Angular frontend, similiar to the React example 
+
 ## Notes 
 
 - Do not add the `aws.cognito.signin.user.admin` scope, (not added by default)
@@ -148,7 +152,7 @@ NOTES:
 
 ### Angular 
 
-Coming soon
+- `cd ui-angular && npm start` to run the UI in http://localhost:3000 (using the same port for simplicity)
 
 ## Other Commands  
  
