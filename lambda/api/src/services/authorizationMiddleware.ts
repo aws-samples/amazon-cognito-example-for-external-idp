@@ -132,12 +132,6 @@ export interface Opts {
    * optional, if provided, will allow all requests to the provided paths
    */
   allowedPaths?: string[];
-
-  /**
-   *  optional, which claim to use as username.
-   *       If not provided will use either `username`, `cognito:username` or `sub`, whichever is available
-   */
-  usernameClaimName?: string;
 }
 
 /**
@@ -148,12 +142,6 @@ export interface Opts {
  * It will return a 403 if non of the supportedGroups exists in the claim
  *
  * @param opts
- *
- *    - supportedGroups - optional, any group that allows the user to do something useful in the app
- *      if the user has none of them, we just return 403 Forbidden as they can't do anything
- *      if not provided, will not do this pre-check
- *    - usernameClaimName - optional, which claim to use as username.
- *       If not provided will use either `username`, `cognito:username` or `sub`, whichever is available
  *
  */
 export const authorizationMiddleware = (opts?: Opts): RequestHandler =>
@@ -172,15 +160,7 @@ export const authorizationMiddleware = (opts?: Opts): RequestHandler =>
   if (claims) {
 
     req.claims = claims;
-    if (opts && opts.usernameClaimName) {
-      // if we were provided with the claim name to use as username
-      const usernameClaim = claims[opts.usernameClaimName];
-      if (usernameClaim) {
-        req.username = usernameClaim;
-      } else {
-        console.warn(`Username claim ${opts.usernameClaimName} was not found in token`);
-      }
-    } else if (claims["cognito:username"]) {
+    if (claims["cognito:username"]) {
       // username claim name in the id token
       req.username = claims["cognito:username"];
     } else if (claims.username) {

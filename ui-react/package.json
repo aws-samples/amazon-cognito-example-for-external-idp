@@ -9,11 +9,11 @@
   },
   "description": "The frontend of the demo",
   "dependencies": {
-    "aws-amplify": "^1.1.29",
-    "aws-amplify-react": "^2.3.9",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6",
-    "react-scripts": "^3.0.1"
+    "aws-amplify": "^1.2.2",
+    "aws-amplify-react": "^2.5.2",
+    "react": "^16.10.2",
+    "react-dom": "^16.10.2",
+    "react-scripts": "^3.2.0"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -31,12 +31,12 @@
     "not op_mini all"
   ],
   "devDependencies": {
-    "@types/chai": "^4.1.7",
-    "@types/jest": "^24.0.15",
-    "@types/node": "^12.0.10",
-    "@types/react": "^16.8.22",
-    "@types/react-dom": "^16.8.4",
+    "@types/chai": "^4.2.3",
+    "@types/jest": "^24.0.19",
+    "@types/node": "^12.11.2",
+    "@types/react": "^16.9.9",
+    "@types/react-dom": "^16.9.2",
     "chai": "^4.2.0",
-    "typescript": "^3.5.2"
+    "typescript": "^3.6.4"
   }
 }

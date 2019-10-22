@@ -25,8 +25,8 @@ describe("User class should", ()=>{
       }
     } as any);
 
-    console.log(user.getGroups());
-    expect(user.getGroups()).to.have.members(groups);
+    console.log(user.groups);
+    expect(user.groups).to.have.members(groups);
 
   });
 
@@ -48,8 +48,8 @@ describe("User class should", ()=>{
       }
     } as any);
 
-    console.log(user.getGroups());
-    expect(user.getGroups()).to.be.empty;
+    console.log(user.groups);
+    expect(user.groups).to.be.empty;
 
   });
 
@@ -64,8 +64,8 @@ describe("User class should", ()=>{
       }
     } as any);
 
-    console.log(user.getClaims());
-    expect(user.getClaims()).eql({});
+    console.log(user.attributes);
+    expect(user.attributes).eql({});
 
   })
   it("return an empty object if session is null ", () => {
@@ -75,8 +75,8 @@ describe("User class should", ()=>{
       }
     } as any);
 
-    console.log(user.getClaims());
-    expect(user.getClaims()).eql({});
+    console.log(user.attributes);
+    expect(user.attributes).eql({});
 
   })
 

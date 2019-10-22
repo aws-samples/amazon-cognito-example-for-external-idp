@@ -1,15 +1,11 @@
 // App.js
 import React, {ChangeEvent, Component, FormEvent, Fragment} from 'react';
 import './App.css';
-import Amplify, {Auth, Hub} from 'aws-amplify';
+import {Auth, Hub} from 'aws-amplify';
 import {CognitoUser} from '@aws-amplify/auth';
-import {AUTH_OPTS} from "../config";
 import {Pet} from "../model/pet";
 import {User} from "../model/user";
-import {PetService} from "../service/petService";
-import {AuthService} from "../service/authService";
-
-Amplify.configure({Auth: AUTH_OPTS});
+import {APIService} from "../service/APIService";
 
 const numberFormat = new Intl.NumberFormat(undefined, {
   style: 'currency',
@@ -19,12 +15,11 @@ const numberFormat = new Intl.NumberFormat(undefined, {
 });
 
 interface AppProps {
-  petService: PetService,
-  authService: AuthService
+  apiService: APIService
 }
 
-interface State {
-  authState?: 'signedIn' | 'signIn' | 'loading';
+export interface State {
+  authState?: 'signedIn' | 'notSignedIn' | 'loading';
   user?: User;
   pets?: Pet[];
   error?: any;
@@ -35,15 +30,13 @@ interface State {
 
 class App extends Component<AppProps, State> {
 
-  private petService: PetService;
-  private authService: AuthService;
+  private apiService: APIService;
 
   constructor(props: AppProps) {
 
     super(props);
 
-    this.petService = props.petService;
-    this.authService = props.authService;
+    this.apiService = props.apiService;
 
     this.state = {
       authState: 'loading',
@@ -52,15 +45,20 @@ class App extends Component<AppProps, State> {
 
   async componentDidMount() {
     console.log("componentDidMount");
-    Hub.listen('auth', ({payload: {event, data}}) => {
+    Hub.listen('auth', async ({payload: {event, data}}) => {
       switch (event) {
         case 'signIn':
+        case 'cognitoHostedUI':
+          let user = await this.getUser();
           // workaround for FF bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1422334
+          // eslint-disable-next-line
+          // noinspection SillyAssignmentJS
           window.location.hash = window.location.hash;
-          this.setState({authState: 'signedIn', user: new User(data), error: null});
+          this.setState({authState: 'signedIn', user: user});
           break;
         case 'signIn_failure':
-          this.setState({authState: 'signIn', user: null, error: data});
+        case 'cognitoHostedUI_failure':
+          this.setState({authState: 'notSignedIn', user: null, error: data});
           break;
         default:
           break;
@@ -68,19 +66,20 @@ class App extends Component<AppProps, State> {
     });
 
     try {
-      let cognitoUser: CognitoUser = await Auth.currentAuthenticatedUser();
-      this.setState({authState: 'signedIn', user: new User(cognitoUser)});
+      let user = await this.getUser();
+      this.setState({authState: 'signedIn', user: user});
     } catch (e) {
       console.warn(e);
-      this.setState({authState: 'signIn', user: null});
+      this.setState({authState: 'notSignedIn', user: null});
     }
-
   }
 
-
+  private async getUser() {
+    let cognitoUser: CognitoUser = await Auth.currentAuthenticatedUser();
+    return new User(cognitoUser);
+  }
 
   async componentDidUpdate(prevProps: Readonly<any>, prevState: Readonly<State>) {
-
     if (prevState.authState !== this.state.authState && this.state.authState === "signedIn") {
       await this.getAllPets();
     }
@@ -94,8 +93,8 @@ class App extends Component<AppProps, State> {
     let groups: string[] = [];
     if(user) {
       // using first name for display
-      username = user.getClaims().name;
-      groups = user.getGroups();
+      username = user.name;
+      groups = user.groups;
     }
     return (
       <Fragment>
@@ -123,7 +122,7 @@ class App extends Component<AppProps, State> {
 
 
               {authState === 'loading' && (<div>loading...</div>)}
-              {authState === 'signIn' &&
+              {authState === 'notSignedIn' &&
               <Fragment>
               <button className="btn btn-primary m-1" onClick={() => Auth.federatedSignIn({customProvider: "IdP"})}>Single Sign On</button>
               <button className="btn btn-primary m-1" onClick={() => Auth.federatedSignIn()}>Sign In / Sign Up</button>
@@ -151,7 +150,7 @@ class App extends Component<AppProps, State> {
           {message &&
           <div className="alert alert-info" onClick={() => this.setState({message: null})}>{message.toString()}</div>}
 
-          {authState === 'signIn' && <div className="alert alert-info">Please sign in</div>}
+          {authState === 'notSignedIn' && <div className="alert alert-info">Please sign in</div>}
 
           {authState === 'signedIn' && <div className="container">
             {pets &&
@@ -170,7 +169,7 @@ class App extends Component<AppProps, State> {
                     onClick={() => this.setState({selectedPet: pet})}
                     className={selectedPet && pet.id === selectedPet.id ? "table-active" : ""}
                 >
-                  <td><span className='badge badge-secondary'>{pet.owner}</span></td>
+                  <td><span className='badge badge-secondary'>{pet.ownerDisplayName}</span></td>
                   <td><strong>{pet.type}</strong></td>
                   <td>{numberFormat.format(pet.price || 0)}</td>
                 </tr>)
@@ -238,7 +237,7 @@ class App extends Component<AppProps, State> {
   async getAllPets() {
     try {
       this.setState({loading: true, selectedPet: undefined});
-      let pets: Pet[] = await this.petService.getAllPets();
+      let pets: Pet[] = await this.apiService.getAllPets();
       this.setState({pets, loading: false});
     } catch (e) {
       console.log(e);
@@ -259,7 +258,7 @@ class App extends Component<AppProps, State> {
     }
     try {
       this.setState({loading: true});
-      await this.petService.savePet(pet);
+      await this.apiService.savePet(pet);
 
       await this.getAllPets();
     } catch (e) {
@@ -280,7 +279,7 @@ class App extends Component<AppProps, State> {
     }
     try {
       this.setState({loading: true});
-      await this.petService.deletePet(pet);
+      await this.apiService.deletePet(pet);
       return this.getAllPets();
     } catch (e) {
       this.setState({error: "Failed to save pet. " + e.message, loading: false});
@@ -289,8 +288,8 @@ class App extends Component<AppProps, State> {
 
   async signOut() {
     try {
-      this.setState({authState: 'signIn', pets: null, user: null});
-      await this.authService.forceSignOut();
+      this.setState({authState: 'notSignedIn', pets: null, user: null});
+      await this.apiService.forceSignOut();
     } catch (e) {
       console.log(e);
     }
@@ -305,7 +304,6 @@ class App extends Component<AppProps, State> {
     }
     return undefined;
   }
-
 }
 
 export default App;

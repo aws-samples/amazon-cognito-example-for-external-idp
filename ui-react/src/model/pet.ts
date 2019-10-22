@@ -7,6 +7,7 @@ export class Pet {
     public id?: string | null,
     public type?: string | null,
     public price?: number | null,
-    public owner?: string | null) {
+    public owner?: string | null,
+    public ownerDisplayName?: string | null) {
   }
 }

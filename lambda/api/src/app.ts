@@ -5,9 +5,9 @@ import cors from "cors";
 import {eventContext} from "aws-serverless-express/middleware";
 
 import uuid4 from "uuid/v4";
-import {Pet} from "./models/pet";
 import {authorizationMiddleware, ForceSignOutHandler} from "./services/authorizationMiddleware";
 import {StorageService} from "./services/storageService";
+import {Pet} from "./models/pet";
 
 export interface AppOptions {
   adminsGroupName: string;
@@ -58,6 +58,27 @@ export class App {
       forceSignOutHandler: forceSignOutHandler,
       allowedPaths: ["/"],
     }));
+
+    // helper function to get some user attributes in case the token doesn't contain them
+    // e.g. in the case of an access token vs an id token
+    const getDisplayNames = async (req: Request) => {
+      let firstName = req.claims.name || req.claims.given_name;
+      let lastName = req.claims.family_name;
+      if (!firstName || !lastName) {
+        const user = await cognito.adminGetUser({Username: req.username, UserPoolId: userPoolId}).promise();
+        if (user && user.UserAttributes) {
+          user.UserAttributes.forEach((userAttribute) => {
+            if (userAttribute.Name === "name" || userAttribute.Name === "given_name") {
+              firstName = userAttribute.Value;
+            }
+            if (userAttribute.Name === "family_name") {
+              lastName = userAttribute.Value;
+            }
+          });
+        }
+      }
+      return {firstName, lastName};
+    };
 
     /**
      * Ping
@@ -120,6 +141,9 @@ export class App {
       pet.id = uuid4();
       // set the owner to the current user
       pet.owner = req.username;
+      const {firstName, lastName} = await getDisplayNames(req);
+      // TODO: error handling in case either of the above is undefined
+      pet.ownerDisplayName = `${firstName} ${lastName}`;
       await storageService.savePet(pet);
       res.json(pet);
     });

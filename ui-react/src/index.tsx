@@ -3,13 +3,16 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './components/App';
 import * as serviceWorker from './serviceWorker';
-import {HttpPetService} from "./service/petService";
-import {HttpAuthService} from "./service/authService";
+import {HttpAPIService} from "./service/APIService";
+import Amplify, {API, Auth} from 'aws-amplify';
+import amplifyConfig from './config/amplifyConfig';
 
-const petService = new HttpPetService();
-const authService = new HttpAuthService();
+Amplify.configure(amplifyConfig);
 
-ReactDOM.render(<App petService={petService} authService={authService}/>, document.getElementById('root'));
+const apiService = new HttpAPIService(API, Auth);
+
+
+ReactDOM.render(<App apiService={apiService} />, document.getElementById('root'));
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.

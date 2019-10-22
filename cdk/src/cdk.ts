@@ -7,8 +7,7 @@ import iam = require("@aws-cdk/aws-iam");
 import {BillingMode, StreamViewType} from "@aws-cdk/aws-dynamodb";
 import "source-map-support/register";
 import {AuthorizationType} from "@aws-cdk/aws-apigateway";
-import {CfnUserPool, SignInType, UserPool, UserPoolAttribute, CfnUserPoolIdentityProvider} from "@aws-cdk/aws-cognito";
-import {AttributeMappingType} from "aws-sdk/clients/cognitoidentityserviceprovider";
+import {CfnUserPool, CfnUserPoolIdentityProvider, SignInType, UserPool, UserPoolAttribute} from "@aws-cdk/aws-cognito";
 import {Utils} from "./utils";
 import {Function, Runtime} from "@aws-cdk/aws-lambda";
 import {URL} from "url";
@@ -133,7 +132,7 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     const apiFunction = new lambda.Function(this, "APIFunction", {
       runtime: nodeRuntime,
       handler: "index.handler",
-      code: lambda.Code.asset("../lambda/api/dist/src"),
+      code: lambda.Code.fromAsset("../lambda/api/dist/src"),
       timeout: Duration.seconds(30),
       memorySize: lambdaMemory,
       environment: {
@@ -156,7 +155,10 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     apiFunction.addToRolePolicy(new iam.PolicyStatement(
       {
         resources: [userPool.userPoolArn],
-        actions: ["cognito-idp:AdminUserGlobalSignOut"]
+        actions: [
+          "cognito-idp:AdminUserGlobalSignOut",
+          "cognito-idp:AdminGetUser"
+        ]
       })
     );
 
@@ -242,29 +244,26 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     // - https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-saml-idp.html
 
     // mapping from IdP fields to Cognito attributes (key is cognito attribute, value is mapped field name)
-    const attributeMapping: AttributeMappingType = {
-      "email": "email",
-      "family_name": "lastName",
-      "name": "firstName"
-    };
-    attributeMapping[groupsAttributeClaimName] = "groups";
-
     const supportedIdentityProviders = ["COGNITO"];
     let cognitoIdp: CfnUserPoolIdentityProvider | undefined = undefined;
 
     if(identityProviderMetadataURLOrFile && identityProviderName) {
 
-      const providerDetails = Utils.isURL(identityProviderMetadataURLOrFile) ? {
-        MetadataURL: identityProviderMetadataURLOrFile
-      } : {
-        MetadataFile: identityProviderMetadataURLOrFile
-      };
-
       cognitoIdp = new cognito.CfnUserPoolIdentityProvider(this, "CognitoIdP", {
         providerName: identityProviderName,
-        providerDetails: providerDetails,
+        providerDetails: Utils.isURL(identityProviderMetadataURLOrFile) ? {
+          MetadataURL: identityProviderMetadataURLOrFile
+        } : {
+          MetadataFile: identityProviderMetadataURLOrFile
+        },
         providerType: "SAML",
-        attributeMapping: attributeMapping,
+        attributeMapping: {
+          "email": "email",
+          "family_name": "lastName",
+          "given_name": "firstName",
+          "name": "firstName", // alias to given_name
+          [groupsAttributeClaimName]: "groups" //syntax for a dynamic key
+        },
         userPoolId: userPool.userPoolId
       });
 

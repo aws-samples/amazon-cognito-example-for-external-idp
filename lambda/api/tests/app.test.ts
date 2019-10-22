@@ -14,11 +14,12 @@ import {DynamoDBForcedSignoutHandler} from "../src/services/dynamoDBForcedSignou
 import {AWSError, Request} from "aws-sdk";
 import {PromiseResult} from "aws-sdk/lib/request";
 import {DocumentClient} from "aws-sdk/lib/dynamodb/document_client";
-import {Pet} from "../src/models/pet";
+
 import {expect} from "chai";
 
 import {Claims} from "../src/services/authorizationMiddleware";
 import {Server} from "http";
+import {Pet} from "../src/models/pet";
 
 /**
  * An example integration test that can check authorization logic based on mock claims
@@ -27,6 +28,8 @@ describe("integration test", async () => {
 
   const user1 = "user1";
   const user2 = "user2";
+  const user1DisplayName = "User One";
+  const user2DisplayName = "User Two";
   const itemsTableName = "Pets";
   const itemsTable = new Map<string, Pet>();
 
@@ -43,8 +46,8 @@ describe("integration test", async () => {
   before(() => {
     server = createServer(mockApp.expressApp);
     handler = (event: any, context: Context) => proxy(server, event, context, "PROMISE");
-    itemsTable.set("p1", new Pet("p1", "cat", 10, user1));
-    itemsTable.set("p2", new Pet("p2", "dog", 10, user2));
+    itemsTable.set("p1", new Pet("p1", "cat", 10, user1, user1DisplayName));
+    itemsTable.set("p2", new Pet("p2", "dog", 10, user2, user2DisplayName));
 
   });
 
@@ -79,6 +82,8 @@ describe("integration test", async () => {
     const response: Response = await request("/pets", "GET", {
       username: user1,
       token_use: "access",
+      name: "User",
+      family_name: "One",
       "cognito:groups": [usersGroupName]
     });
 

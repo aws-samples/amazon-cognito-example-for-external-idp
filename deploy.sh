@@ -11,9 +11,9 @@ echo "deploying..."
 
 cd cdk && npm run cdk-deploy && cd -
 
-echo "generating config for react UI..."
+echo "generating config for UI..."
 
-./config-ui-react.sh
+./config-ui.sh
 
 
 
