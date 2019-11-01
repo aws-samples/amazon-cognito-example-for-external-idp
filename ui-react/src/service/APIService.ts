@@ -41,7 +41,8 @@ export class HttpAPIService implements APIService {
    */
   public async getAllPets(): Promise<Pet[]> {
     const authorizationHeader = await this.getAuthorizationHeader();
-    return await this.api.get(REST_API_NAME, '/pets', {headers: authorizationHeader});
+    return await this.api.get(REST_API_NAME, '/pets',
+      {headers: authorizationHeader});
   }
 
   /**
@@ -81,8 +82,9 @@ export class HttpAPIService implements APIService {
 
   private async getAuthorizationHeader() {
     const session = await this.auth.currentSession();
-    const accessToken = session.getAccessToken().getJwtToken();
-    return {Authorization: accessToken}
+    // either id token or access token based on the API
+    const idToken = session.getIdToken().getJwtToken();
+    return {Authorization: idToken}
   }
 
 }

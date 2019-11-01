@@ -55,7 +55,7 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     // See also:
     // - https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html
 
-    const preTokenGeneration: Function = new lambda.Function(this, "PreTokenGeneration", {
+    const preTokenGeneration = new lambda.Function(this, "PreTokenGeneration", {
       runtime: nodeRuntime,
       handler: "index.handler",
       code: lambda.Code.fromAsset("../lambda/pretokengeneration/dist/src"),
@@ -219,13 +219,10 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
 
     });
 
-    // these few lines demonstrates two things
-    // 1. how to add a low level CFN attribute in case it's not in the high level CDK construct
-    // 2. by adding a scope to authorizationScopes, API Gateway now expects an access token instead of an ID token
+    // uncomment to use an access token instead of an id token
 
-    const cfnMethod = method.node.defaultChild as apigateway.CfnMethod;
-
-    cfnMethod.authorizationScopes = ["openid"];
+    // const cfnMethod = method.node.defaultChild as apigateway.CfnMethod;
+    // cfnMethod.authorizationScopes = ["openid"];
 
     // ------------------------------------------------------------------------
     // Add CORS support to all
@@ -243,7 +240,7 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     // See also:
     // - https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-saml-idp.html
 
-    // mapping from IdP fields to Cognito attributes (key is cognito attribute, value is mapped field name)
+    // mapping from IdP fields to Cognito attributes
     const supportedIdentityProviders = ["COGNITO"];
     let cognitoIdp: CfnUserPoolIdentityProvider | undefined = undefined;
 
@@ -257,6 +254,7 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
           MetadataFile: identityProviderMetadataURLOrFile
         },
         providerType: "SAML",
+        // Structure: { "<cognito attribute name>": "<IdP SAML attribute name>" }
         attributeMapping: {
           "email": "email",
           "family_name": "lastName",

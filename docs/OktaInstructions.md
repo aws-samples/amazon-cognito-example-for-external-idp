@@ -3,7 +3,6 @@
 ## Overview
 
 This walkthrough will help guide you through creating a working Okta Application in order to successfully run the demo. 
-<!-- This document will guide you through creating an Okta Directory and Application in order to test IdP SSO in an applications Cognito user pool. -->
 
 ## Okta Directory and Application Setup
 
@@ -68,14 +67,4 @@ This walkthrough will help guide you through creating a working Okta Application
 ![App Purpose](images/app-config.png)
 
 21. Click **Finish**.
-<!-- 
-## Adding an IdP to a Cognito user pool
-
-### FIXME
-Here you can add your specific instruction on how to add the IdP to the Cognito user pool
-1. In the AWS Management Console, go to **Cognito**.
-2. In Cognito, select **Mangae User Pools**.
-3. Select the user pool created for the demo.
-   * Example: *MyTestAppPoolxxx-xxxxx*
-4. On the left-hand side under **Federation**, select **Identity Providers**. Then, select **SAML**. -->
 

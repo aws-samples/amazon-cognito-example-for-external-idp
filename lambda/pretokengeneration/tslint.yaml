@@ -12,3 +12,4 @@ rules:
   jsdoc-format: false
   trailing-comma: false
   arrow-parens: false
+  object-literal-shorthand: false

@@ -20,7 +20,7 @@ describe("lambda handler", () => {
       response: {},
     });
 
-    expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.be.empty;
+    expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.be.undefined;
     expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.be.empty;
     expect(result.response.claimsOverrideDetails!.claimsToAddOrOverride).to.be.undefined;
 
@@ -43,7 +43,7 @@ describe("lambda handler", () => {
       response: {},
     });
 
-    expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.contain("custom:groups");
+    expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.be.undefined;
     // tslint:disable-next-line:max-line-length
     expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["test1", "test2"]);
     // expect(result.response.claimsOverrideDetails!.claimsToAddOrOverride).to.be.undefined;
@@ -67,12 +67,12 @@ describe("lambda handler", () => {
       response: {},
     });
 
-    expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.contain("custom:groups");
+    expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.be.undefined;
     // tslint:disable-next-line:max-line-length
-    expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["test"]);
-    // expect(result.response.claimsOverrideDetails!.claimsToAddOrOverride).to.be.undefined;
+    expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.be.empty;
 
   });
+
   it("GET success - mix", async () => {
 
     const result = await handler({
@@ -90,9 +90,9 @@ describe("lambda handler", () => {
       response: {},
     });
 
-    expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.contain("custom:groups");
+    expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.be.undefined;
     // tslint:disable-next-line:max-line-length
-    expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["test", "DemoAppAdmins", "DemoAppUsers"]);
+    expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["DemoAppAdmins", "DemoAppUsers"]);
     // expect(result.response.claimsOverrideDetails!.claimsToAddOrOverride).to.be.undefined;
 
   });
@@ -112,12 +112,13 @@ describe("lambda handler", () => {
       response: {},
     });
 
-    expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.be.empty;
+    expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.be.undefined;
     // tslint:disable-next-line:max-line-length
-    expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["test", "test2"]);
+    expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.be.empty;
     // expect(result.response.claimsOverrideDetails!.claimsToAddOrOverride).to.be.undefined;
 
   });
+
   it("GET success - remove idp auto generated groups", async () => {
 
     const result = await handler({
