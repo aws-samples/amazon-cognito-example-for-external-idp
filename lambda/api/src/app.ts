@@ -31,20 +31,11 @@ export class App {
 
   constructor(private opts: AppOptions, public expressApp: Express = express()) {
 
-    const usersGroupName = opts.usersGroupName;
-    const adminsGroupName = opts.adminsGroupName;
-    const cognito = opts.cognito;
-    const allowedOrigin = opts.allowedOrigin;
-    const forceSignOutHandler = opts.forceSignOutHandler;
-    const storageService = opts.storageService;
-    const userPoolId = opts.userPoolId;
-    const authorizationHeaderName = opts.authorizationHeaderName;
-
     const app = expressApp;
 
     app.use(cors({
       credentials: false,
-      origin: [allowedOrigin],
+      origin: [(opts.allowedOrigin)],
     }));
 
     app.use(json());
@@ -53,9 +44,12 @@ export class App {
     app.use(eventContext());
 
     app.use(authorizationMiddleware({
-      authorizationHeaderName: authorizationHeaderName,
-      supportedGroups: [adminsGroupName, usersGroupName],
-      forceSignOutHandler: forceSignOutHandler,
+      authorizationHeaderName: opts.authorizationHeaderName,
+      supportedGroups: [
+        opts.adminsGroupName,
+        opts.usersGroupName,
+      ],
+      forceSignOutHandler: opts.forceSignOutHandler,
       allowedPaths: ["/"],
     }));
 
@@ -71,12 +65,12 @@ export class App {
      */
     app.get("/pets", async (req: Request, res: Response) => {
 
-      if (req.groups.has(adminsGroupName)) {
+      if (req.groups.has(opts.adminsGroupName)) {
         // if the user has the admin group, we return all pets
-        res.json(await storageService.getAllPets());
+        res.json(await opts.storageService.getAllPets());
       } else {
         // otherwise, just owned pets (middleware ensure that the user is in either of the 2 groups)
-        res.json(await storageService.getAllPetsByOwner(req.username));
+        res.json(await opts.storageService.getAllPetsByOwner(req.username));
       }
     });
 
@@ -86,14 +80,14 @@ export class App {
     app.get("/pets/:petId", async (req: Request, res: Response) => {
       const petId = req.params.petId;
 
-      const pet = await storageService.getPet(petId);
+      const pet = await opts.storageService.getPet(petId);
 
       if (!pet) {
         res.status(404).json({error: `Pet with id ${petId} was not found`});
         return;
       }
 
-      if (req.groups.has(adminsGroupName) || pet.owner === req.username) {
+      if (req.groups.has(opts.adminsGroupName) || pet.owner === req.username) {
         // if the pet is owned by the user or they are an admin, return it.
         res.json(pet);
       } else {
@@ -123,7 +117,7 @@ export class App {
 
       pet.ownerDisplayName = req.claims.email;
 
-      await storageService.savePet(pet);
+      await opts.storageService.savePet(pet);
       res.json(pet);
     });
 
@@ -147,18 +141,18 @@ export class App {
         res.status(400).json({error: "Invalid request - Pet.id doesn't match request param"});
         return;
       }
-      const existingPet = await storageService.getPet(petId);
+      const existingPet = await opts.storageService.getPet(petId);
 
       if (!existingPet) {
         res.status(404).json({error: `Pet with id ${petId} was not found`});
         return;
       }
 
-      if (req.groups.has(adminsGroupName)
+      if (req.groups.has(opts.adminsGroupName)
         || updatedPet.owner === existingPet.owner && existingPet.owner === req.username) {
         // if the user is an admin, or the pet is owned by the owner and didn't change the owner, allow
         // only admin can change the owner
-        await storageService.savePet(updatedPet);
+        await opts.storageService.savePet(updatedPet);
         res.json(updatedPet);
 
       } else {
@@ -172,16 +166,16 @@ export class App {
     app.delete("/pets/:petId", async (req: Request, res: Response) => {
 
       const petId = req.params.petId;
-      const pet = await storageService.getPet(petId);
+      const pet = await opts.storageService.getPet(petId);
 
       if (!pet) {
         res.status(404).json({error: `Pet with id ${petId} was not found`});
         return;
       }
 
-      if (req.groups.has(adminsGroupName) || pet.owner === req.username) {
+      if (req.groups.has(opts.adminsGroupName) || pet.owner === req.username) {
         // if the pet is owned by the user or they are an admin, allow deleting it
-        await storageService.deletePet(petId);
+        await opts.storageService.deletePet(petId);
         res.json(pet);
       } else {
         res.status(403).json({error: `Unauthorized`});
@@ -190,9 +184,9 @@ export class App {
 
     app.post("/forceSignOut", async (req: Request, res: Response) => {
       // all tokens issued before this call will no longer be allowed to be used
-      await cognito.adminUserGlobalSignOut({Username: req.username, UserPoolId: userPoolId}).promise();
-      if (forceSignOutHandler) {
-        await forceSignOutHandler.forceSignOut(req);
+      await opts.cognito.adminUserGlobalSignOut({Username: req.username, UserPoolId: opts.userPoolId}).promise();
+      if (opts.forceSignOutHandler) {
+        await opts.forceSignOutHandler.forceSignOut(req);
       }
       res.status(200).send();
     });

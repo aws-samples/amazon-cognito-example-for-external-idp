@@ -9,7 +9,8 @@ import "source-map-support/register";
 import {AuthorizationType} from "@aws-cdk/aws-apigateway";
 import {CfnUserPool, CfnUserPoolIdentityProvider, SignInType, UserPool, UserPoolAttribute} from "@aws-cdk/aws-cognito";
 import {Utils} from "./utils";
-import {Function, Runtime} from "@aws-cdk/aws-lambda";
+import {Runtime} from "@aws-cdk/aws-lambda";
+
 import {URL} from "url";
 import {Duration} from "@aws-cdk/core";
 
@@ -17,7 +18,7 @@ import {Duration} from "@aws-cdk/core";
  * Define a CloudFormation stack that creates a serverless application with
  * Amazon Cognito and an external SAML based IdP
  */
-export class AmazonCognitoIdPExampleStack extends cdk.Stack {
+export class BackendStack extends cdk.Stack {
 
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -29,12 +30,10 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     const domain = Utils.getEnv("COGNITO_DOMAIN_NAME");
     const identityProviderName = Utils.getEnv("IDENTITY_PROVIDER_NAME", "");
 
-    const identityProviderMetadataURLOrFile = Utils.getEnv("IDENTITY_PROVIDER_METADATA","");
+    const identityProviderMetadataURLOrFile = Utils.getEnv("IDENTITY_PROVIDER_METADATA", "");
     const appUrl = Utils.getEnv("APP_URL");
-    // validate URL (throws if invalid URL
-    new URL(appUrl);
 
-    const callbackURL = appUrl + "/";
+    const corsOrigin = new URL(appUrl).origin;
 
     const groupsAttributeName = Utils.getEnv("GROUPS_ATTRIBUTE_NAME", "groups");
     const adminsGroupName = Utils.getEnv("ADMINS_GROUP_NAME", "pet-app-admins");
@@ -138,7 +137,7 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
       environment: {
         ITEMS_TABLE_NAME: itemsTable.tableName,
         USERS_TABLE_NAME: usersTable.tableName,
-        ALLOWED_ORIGIN: appUrl,
+        ALLOWED_ORIGIN: corsOrigin,
         ADMINS_GROUP_NAME: adminsGroupName,
         USERS_GROUP_NAME: usersGroupName,
         USER_POOL_ID: userPoolCfn.ref,
@@ -228,8 +227,8 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     // Add CORS support to all
     // ------------------------------------------------------------------------
 
-    Utils.addCorsOptions(proxyResource, appUrl);
-    Utils.addCorsOptions(rootResource, appUrl);
+    Utils.addCorsOptions(proxyResource, corsOrigin);
+    Utils.addCorsOptions(rootResource, corsOrigin);
 
     // ========================================================================
     // Resource: Identity Provider Settings
@@ -244,7 +243,7 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
     const supportedIdentityProviders = ["COGNITO"];
     let cognitoIdp: CfnUserPoolIdentityProvider | undefined = undefined;
 
-    if(identityProviderMetadataURLOrFile && identityProviderName) {
+    if (identityProviderMetadataURLOrFile && identityProviderName) {
 
       cognitoIdp = new cognito.CfnUserPoolIdentityProvider(this, "CognitoIdP", {
         providerName: identityProviderName,
@@ -285,14 +284,13 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
       allowedOAuthScopes: ["phone", "email", "openid", "profile"],
       generateSecret: false,
       refreshTokenValidity: 1,
-      //TODO: add your app's prod URLs here
-      callbackUrLs: [callbackURL],
-      logoutUrLs: [callbackURL],
+      callbackUrLs: [appUrl],
+      logoutUrLs: [appUrl],
       userPoolId: userPool.userPoolId
     });
 
     // we want to make sure we do things in the right order
-    if(cognitoIdp) {
+    if (cognitoIdp) {
       cfnUserPoolClient.node.addDependency(cognitoIdp);
     }
 
@@ -309,6 +307,7 @@ export class AmazonCognitoIdPExampleStack extends cdk.Stack {
       domain: domain,
       userPoolId: userPool.userPoolId
     });
+
 
     // ========================================================================
     // Stack Outputs
@@ -359,5 +358,7 @@ const stackRegion = Utils.getEnv("STACK_REGION");
 // you deploy stacks to production.
 // see https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html
 
-const stack = new AmazonCognitoIdPExampleStack(app, stackName, {env: {region: stackRegion, account: stackAccount}});
-stack.templateOptions.transforms = ["AWS::Serverless-2016-10-31"];
+const stackProps = {env: {region: stackRegion, account: stackAccount}};
+const backendStack = new BackendStack(app, stackName, stackProps);
+
+backendStack.templateOptions.transforms = ["AWS::Serverless-2016-10-31"];

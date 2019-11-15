@@ -27,6 +27,7 @@ export default {
   cognitoUserPoolId: "${userPoolId}",
   cognitoUserPoolAppClientId: "${appClientId}",
   apiUrl: "${apiURL}",
+  appUrl: "${process.env.APP_URL}"
 };
 `;
 

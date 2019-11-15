@@ -2,7 +2,6 @@
 import autoGenConfig from './autoGenConfig';
 
 // for demonstration purposes, replace with actual URL
-const redirectURI = window.location.protocol + '//' + window.location.host + '/';
 
 export const REST_API_NAME = "main";
 
@@ -27,9 +26,9 @@ export default {
 
       scope: ['phone', 'email', 'openid', 'profile'],
 
-      redirectSignIn: redirectURI,
+      redirectSignIn: autoGenConfig.appUrl,
 
-      redirectSignOut: redirectURI,
+      redirectSignOut: autoGenConfig.appUrl,
 
       responseType: 'code', // or token
 
