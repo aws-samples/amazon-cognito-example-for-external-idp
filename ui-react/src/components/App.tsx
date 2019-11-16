@@ -98,7 +98,7 @@ class App extends Component<AppProps, State> {
       <Fragment>
         <nav className="navbar navbar-expand-md navbar-dark bg-dark">
 
-          <a className="navbar-brand" href="/">Cognito + Amplify + React Demo</a>
+          <a className="navbar-brand" href="/">Amazon Cognito + AWS Amplify + React Demo</a>
 
           <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault"
                   aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">

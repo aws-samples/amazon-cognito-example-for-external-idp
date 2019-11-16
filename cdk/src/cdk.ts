@@ -4,6 +4,8 @@ import dynamodb = require("@aws-cdk/aws-dynamodb");
 import lambda = require("@aws-cdk/aws-lambda");
 import cognito = require("@aws-cdk/aws-cognito");
 import iam = require("@aws-cdk/aws-iam");
+import s3 = require("@aws-cdk/aws-s3");
+import cloudfront = require("@aws-cdk/aws-cloudfront");
 import {BillingMode, StreamViewType} from "@aws-cdk/aws-dynamodb";
 import "source-map-support/register";
 import {AuthorizationType} from "@aws-cdk/aws-apigateway";
@@ -13,6 +15,8 @@ import {Runtime} from "@aws-cdk/aws-lambda";
 
 import {URL} from "url";
 import {Duration} from "@aws-cdk/core";
+import {Bucket} from "@aws-cdk/aws-s3";
+import {CloudFrontWebDistribution} from "@aws-cdk/aws-cloudfront";
 
 /**
  * Define a CloudFormation stack that creates a serverless application with
@@ -31,9 +35,8 @@ export class BackendStack extends cdk.Stack {
     const identityProviderName = Utils.getEnv("IDENTITY_PROVIDER_NAME", "");
 
     const identityProviderMetadataURLOrFile = Utils.getEnv("IDENTITY_PROVIDER_METADATA", "");
-    const appUrl = Utils.getEnv("APP_URL");
 
-    const corsOrigin = new URL(appUrl).origin;
+    const appFrontendDeployMode = Utils.getEnv("APP_FRONTEND_DEPLOY_MODE", "");
 
     const groupsAttributeName = Utils.getEnv("GROUPS_ATTRIBUTE_NAME", "groups");
     const adminsGroupName = Utils.getEnv("ADMINS_GROUP_NAME", "pet-app-admins");
@@ -42,6 +45,48 @@ export class BackendStack extends cdk.Stack {
     const nodeRuntime: Runtime = lambda.Runtime.NODEJS_10_X;
     const authorizationHeaderName = "Authorization";
     const groupsAttributeClaimName = "custom:" + groupsAttributeName;
+
+    // ========================================================================
+    // Resource: (optional) S3 bucket / CloudFront distribution
+    // ========================================================================
+
+    // Purpose: store the static frontend assets (the app's user interface)
+
+    const isModeS3 = appFrontendDeployMode === "s3";
+    const isModeCloudfront = appFrontendDeployMode === "cloudfront";
+    let appUrl = Utils.getEnv("APP_URL", "");
+    let uiBucketName: string | undefined = undefined;
+    let corsOrigin: string | undefined = undefined;
+    if (isModeS3 || isModeCloudfront) {
+
+      const uiBucket: Bucket = new s3.Bucket(this, 'UIBucket');
+      uiBucketName = uiBucket.bucketName;
+
+      if (isModeS3) {
+        // s3 mode, for development / testing only
+        appUrl = "https://" + uiBucket.bucketDomainName + "/index.html";
+        corsOrigin = "https://" + uiBucket.bucketDomainName;
+      } else {
+        // cloudfront mode
+        const distribution = this.createCloudFrontDistribution(uiBucket);
+
+        if (!appUrl) {
+          // if appUrl ws not specified, use the distribution URL
+          appUrl = "https://" + distribution.domainName;
+          corsOrigin = "https://" + distribution.domainName;
+        }
+      }
+    }
+
+    if (!appUrl) {
+      // if not s3 or cloudfront, APP_URL must be defined
+      throw new Error(`APP_URL environment variable must be defined`);
+    }
+
+    if (!corsOrigin) {
+      // if corsOrigin ws not set dynamically, get it from the appUrl
+      corsOrigin = new URL(appUrl).origin;
+    }
 
     // ========================================================================
     // Resource: Pre Token Generation function
@@ -343,6 +388,47 @@ export class BackendStack extends cdk.Stack {
       description: "Lambda Function Name",
       value: apiFunction.functionName
     });
+
+    new cdk.CfnOutput(this, "AppUrl", {
+      description: "The frontend app's URL",
+      value: appUrl
+    });
+
+    if (uiBucketName) {
+      new cdk.CfnOutput(this, "UIBucketName", {
+        description: "The frontend app's bucket name",
+        value: uiBucketName
+      });
+    }
+  }
+
+  private createCloudFrontDistribution(uiBucket: Bucket): CloudFrontWebDistribution {
+    const cloudFrontOia = new cloudfront.CfnCloudFrontOriginAccessIdentity(this, 'OIA', {
+      cloudFrontOriginAccessIdentityConfig: {
+        comment: `OIA for ${uiBucket.bucketName}`
+      }
+    });
+
+    // create CloudFront distribution
+    const distribution = new cloudfront.CloudFrontWebDistribution(this, 'UIDistribution', {
+      originConfigs: [
+        {
+          s3OriginSource: {
+            s3BucketSource: uiBucket,
+            originAccessIdentityId: cloudFrontOia.ref
+          },
+          behaviors: [{isDefaultBehavior: true}]
+        }
+      ]
+    });
+
+    // grant read permissions to CloudFront
+    uiBucket.addToResourcePolicy(new iam.PolicyStatement({
+      actions: ["s3:GetBucket*", "s3:GetObject*", "s3:List*"],
+      resources: [uiBucket.bucketArn, uiBucket.bucketArn + "/*"],
+      principals: [new iam.CanonicalUserPrincipal(cloudFrontOia.attrS3CanonicalUserId)]
+    }));
+    return distribution;
   }
 }
 

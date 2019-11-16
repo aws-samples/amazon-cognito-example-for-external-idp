@@ -17,19 +17,22 @@ class GenerateConfig {
     const userPoolId = outputsByName.get("UserPoolIdOutput");
     const appClientId = outputsByName.get("AppClientIdOutput");
     const apiURL = outputsByName.get("APIUrlOutput");
+    const appURL = outputsByName.get("AppUrl");
+    const uiBucketName = outputsByName.get("UIBucketName") || "";
 
     const cognitoDomain = `${cognitoDomainPrefix}.auth.${region}.amazoncognito.com`;
+    const params = {
+      cognitoDomain: cognitoDomain,
+      region: region,
+      cognitoUserPoolId: userPoolId,
+      cognitoUserPoolAppClientId: appClientId,
+      apiUrl: apiURL,
+      appUrl: appURL,
+      uiBucketName: uiBucketName
+    };
 
-    const autoGenConfigFile = `// this file is auto generated, do not edit it directly
-export default {
-  cognitoDomain: "${cognitoDomain}",
-  region: "${region}",
-  cognitoUserPoolId: "${userPoolId}",
-  cognitoUserPoolAppClientId: "${appClientId}",
-  apiUrl: "${apiURL}",
-  appUrl: "${process.env.APP_URL}"
-};
-`;
+    const autoGenConfigFile = "// this file is auto generated, do not edit it directly\n" +
+      "module.exports = " + JSON.stringify(params, null, 2);
 
     console.log(autoGenConfigFile);
 
