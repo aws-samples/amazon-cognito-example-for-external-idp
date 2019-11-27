@@ -64,8 +64,8 @@ export class BackendStack extends cdk.Stack {
 
       if (isModeS3) {
         // s3 mode, for development / testing only
-        appUrl = "https://" + uiBucket.bucketDomainName + "/index.html";
-        corsOrigin = "https://" + uiBucket.bucketDomainName;
+        appUrl = "https://" + uiBucket.bucketRegionalDomainName + "/index.html";
+        corsOrigin = "https://" + uiBucket.bucketRegionalDomainName;
       } else {
         // cloudfront mode
         const distribution = this.createCloudFrontDistribution(uiBucket);
