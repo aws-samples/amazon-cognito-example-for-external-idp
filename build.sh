@@ -3,6 +3,7 @@
 set -e
 source ./env.sh
 
-cd lambda/api && npm run build && cd -
-cd lambda/pretokengeneration && npm run build && cd -
-cd cdk && npm run build && cd -
+npm run build --silent --prefix lambda/api
+npm run build --silent --prefix lambda/pretokengeneration
+npm run build --silent --prefix cdk
+echo build successful

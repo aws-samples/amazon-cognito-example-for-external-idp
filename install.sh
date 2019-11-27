@@ -5,11 +5,17 @@ source ./env.sh
 
 echo "this will run npm install in all relevant sub-folders, build the project, and install the CDK toolkit"
 
-cd lambda/api && npm install && cd -
-cd lambda/pretokengeneration && npm install && cd -
-cd cdk && npm install && cd -
-cd ui-react && npm install && cd -
+npm install --silent --prefix lambda/api
+
+npm install --silent --prefix lambda/pretokengeneration
+
+npm install --silent --prefix lambda/pretokengeneration
+
+npm install --silent --prefix cdk
+
+npm install --silent --prefix ui-react
+
 
 ./build.sh
 
-cd cdk && npm run cdk -- bootstrap && cd -
+npm run cdk --silent --prefix cdk -- bootstrap
