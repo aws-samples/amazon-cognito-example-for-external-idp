@@ -138,6 +138,20 @@ export class BackendStack extends cdk.Stack {
       }
     }];
 
+    // create two groups, one for admins one for users
+    // these groups can be used without configuring a 3rd party IdP
+
+    new cognito.CfnUserPoolGroup(this, "AdminsGroup", {
+      groupName: adminsGroupName,
+      userPoolId: userPool.userPoolId,
+
+    });
+
+    new cognito.CfnUserPoolGroup(this, "UsersGroup", {
+      groupName: usersGroupName,
+      userPoolId: userPool.userPoolId,
+    });
+
     // ========================================================================
     // Resource: Amazon DynamoDB Table
     // ========================================================================

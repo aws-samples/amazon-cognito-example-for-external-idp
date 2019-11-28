@@ -15,7 +15,6 @@ npm install --silent --prefix cdk
 
 npm install --silent --prefix ui-react
 
-
-./build.sh
+npm run build --silent --prefix cdk
 
 npm run cdk --silent --prefix cdk -- bootstrap

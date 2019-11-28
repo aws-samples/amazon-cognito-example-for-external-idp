@@ -9,14 +9,8 @@ echo "Building backend "
 
 echo "Deploying backend stack..."
 
-cd cdk
-
 # deploy the cdk stack (ignore the error in case it's due to 'No updates are to be performed')
-set +e
-npm run cdk-deploy
-set -e
-
-cd ..
+npm run cdk-deploy --silent --prefix cdk || true
 
 STACK_STATUS=$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --region "${STACK_REGION}" --query "Stacks[].StackStatus[]" --output text)
 
@@ -31,6 +25,7 @@ echo "Generating UI configuration..."
 
 BUCKET_NAME=$(node --print "require('./ui-react/src/config/autoGenConfig.js').uiBucketName")
 APP_URL=$(node --print "require('./ui-react/src/config/autoGenConfig.js').appUrl")
+COGNITO_INSTRUCTIONS="Create some users (in the pool or your IdP) and assign them the groups 'pet-app-admins' and/or 'pet-app-users'"
 
 if [[ "${BUCKET_NAME}" != "" ]]; then
 
@@ -46,25 +41,28 @@ if [[ "${BUCKET_NAME}" != "" ]]; then
     # NOTE: for development / demo purposes only, we use a public-read ACL on the frontend static files
     # in a production scenario use CloudFront and keep the s3 objects private
     aws s3 sync --delete --acl public-read ./build/ "s3://${BUCKET_NAME}" &> /dev/null
-
+    echo "${COGNITO_INSTRUCTIONS}"
+    echo "Then visit the app at: ${APP_URL}"
   fi
 
   if [[ "${APP_FRONTEND_DEPLOY_MODE}" == "cloudfront" ]]; then
-    echo "Publishing UI to ${BUCKET_NAME}, will be availabing via CloudFront"
+    echo "Publishing frontend to ${BUCKET_NAME}, will be availabing via CloudFront"
 
-    # since we serve from CloudFront, we can keep the objects private so we don't pass --acl public-read here
+    # since we serve from CloudFront, we can keep the objects private, so we don't pass --acl public-read here
     aws s3 sync --delete ./build/ "s3://${BUCKET_NAME}" &> /dev/null
+
+    echo "${COGNITO_INSTRUCTIONS}"
+    echo "Then visit the app at: ${APP_URL} (may take a few minutes for the distribution to finish deployment)"
   fi
 
-  echo "Create some users (in the pool or your IdP) and assign them the groups 'pet-app-admins' and/or 'pet-app-users'"
-  echo "Then visit the app at: ${APP_URL}"
 
 elif [[ "${APP_URL}" == "http://localhost"* ]]; then
 
-  echo "Serving UI locally"
-  cd ./ui-react
-  npm start
+  echo "${COGNITO_INSTRUCTIONS}"
+  echo "Then run: cd ./ui-react && npm start # will launch the app in your browser at ${APP_URL}"
 
 fi
+
+
 
 
