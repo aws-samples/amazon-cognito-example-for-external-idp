@@ -23,5 +23,9 @@ export class User {
     return this.attributes["name"];
   }
 
+  get email(): string {
+    return this.attributes["email"];
+  }
+
 }
 

@@ -91,7 +91,7 @@ class App extends Component<AppProps, State> {
     let groups: string[] = [];
     if(user) {
       // using first name for display
-      username = user.name;
+      username = user.name || user.email;
       groups = user.groups;
     }
     return (

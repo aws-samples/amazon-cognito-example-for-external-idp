@@ -24,7 +24,7 @@
 
       <ng-container *ngIf="model.user; else noUser">
         <div class="nav-item dropdown">
-          <button class="nav-link dropdown-toggle btn btn-link" data-toggle="dropdown">{{model.user.name}}</button>
+          <button class="nav-link dropdown-toggle btn btn-link" data-toggle="dropdown">{{model.user.name || model.user.email}}</button>
           <div class="dropdown-menu dropdown-menu-right">
             <button class="dropdown-item btn btn-warning" (click)="signOut()">Sign Out</button>
           </div>

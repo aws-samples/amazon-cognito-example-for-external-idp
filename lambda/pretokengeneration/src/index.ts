@@ -28,12 +28,6 @@ import {getGroupsCustomAttributeName, parseGroupsAttribute, PreTokenGenerationEv
  * <b>IMPORTANT</b>: the scope `aws.cognito.signin.user.admin` should NOT be enabled for any app client that uses this
  * The reason is that with aws.cognito.signin.user.admin, users can modify their own attributes with their access token
  *
- * <b>NOTE:</b> this overrides the groups and ignore any physical groups.
- * if you want to also include the existing ones then also add
- *
- * <code>event.response.claimsOverrideDetails.groupOverrideDetails.groupsToOverride
- * .push(...event.request.groupConfiguration.groupsToOverride);</code>
- *
  * if you want to remove the temporary custom:groups attribute used as an intermediary from the token
  *
  * <code>
@@ -51,10 +45,12 @@ export const handler = async (event: PreTokenGenerationEvent): Promise<PreTokenG
   event.response.claimsOverrideDetails = {
     groupOverrideDetails: {
       groupsToOverride:
-      // parses a single value, e.g. "[g1,g2]" into a string array, e.g ["g1","g2"]
-        parseGroupsAttribute(
-          event.request.userAttributes[getGroupsCustomAttributeName()]
-        )
+        [
+          // any existing groups the user may belong to
+          ...event.request.groupConfiguration.groupsToOverride,
+          // groups from the IdP (parses a single value, e.g. "[g1,g2]" into a string array, e.g ["g1","g2"])
+          ...parseGroupsAttribute(event.request.userAttributes[getGroupsCustomAttributeName()])
+        ]
     }
   };
   return event;
