@@ -52,6 +52,8 @@ export class AppComponent implements OnInit {
   constructor(private amplifyService: AmplifyService,
               private apiService: HttpAPIService,
               private zone: NgZone) {
+
+
   }
 
   // ========================================================================
@@ -160,8 +162,29 @@ export class AppComponent implements OnInit {
   // ========================================================================
 
   private async onLoad() {
-    this.model.user = await this.getUser();
-    await this.loadAllPets();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const idpParamName = 'identity_provider';
+    const idp = urlParams.get(idpParamName);
+
+    try {
+      this.model.user = await this.getUser();
+
+      // remove identity_provider query param (not needed if signed in successfully)
+      if (idp) {
+        urlParams.delete(idpParamName);
+        const params = urlParams.toString();
+        window.history.replaceState(null, null, window.location.pathname + (params ? '?' + params : ''));
+      }
+
+      await this.loadAllPets();
+    } catch (e) {
+
+      if (e === 'not authenticated' && idp) {
+        await this.signIn(idp);
+      }
+    }
+
   }
 
   private async getUser() {
@@ -208,7 +231,7 @@ export class AppComponent implements OnInit {
       // - https://github.com/angular/angular/issues/10208#issuecomment-234749786
       // - https://github.com/angular/zone.js/issues/830
 
-      this.zone.run( () => {
+      this.zone.run(() => {
         this.model.user = null;
         console.warn(error);
       });

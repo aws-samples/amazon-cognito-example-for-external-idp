@@ -63,12 +63,30 @@ class App extends Component<AppProps, State> {
       }
     });
 
+    // if the URL contains ?identity_provider=x, and the user is signed out, we redirect to the IdP on load
+    const urlParams = new URLSearchParams(window.location.search);
+    const idpParamName = 'identity_provider';
+    const idp = urlParams.get(idpParamName);
+
     try {
       let user = await this.getUser();
+
+      // remove identity_provider query param (not needed if signed in successfully)
+      if (idp) {
+        urlParams.delete(idpParamName);
+        const params = urlParams.toString();
+        window.history.replaceState(null, null, window.location.pathname + (params ? '?' + params : ''));
+      }
+
       this.setState({authState: 'signedIn', user: user});
     } catch (e) {
-      console.warn(e);
-      this.setState({authState: 'signedOut', user: null});
+      // user is not authenticated, and we have an IdP in the request
+      if (e === 'not authenticated' && idp) {
+        await Auth.federatedSignIn({customProvider: idp});
+      } else {
+        console.warn(e);
+        this.setState({authState: 'signedOut', user: null});
+      }
     }
   }
 
