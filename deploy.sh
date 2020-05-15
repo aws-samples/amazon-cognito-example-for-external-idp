@@ -59,7 +59,7 @@ if [[ "${BUCKET_NAME}" != "" ]]; then
 elif [[ "${APP_URL}" == "http://localhost"* ]]; then
 
   echo "${COGNITO_INSTRUCTIONS}"
-  echo "Then run: cd ./ui-react && npm start # will launch the app in your browser at ${APP_URL}"
+  echo "Then run: cd ./ui-angular && npm start # will launch the app in your browser at ${APP_URL}"
 
 fi
 

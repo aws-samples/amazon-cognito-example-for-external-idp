@@ -1,6 +1,13 @@
 {
-  "name": "ui-angular",
-  "version": "0.0.0",
+  "name": "amazon-cognito-example-for-external-idp-ui-angular",
+  "version": "0.1.2",
+  "author": "Eran Medan",
+  "license": "MIT-0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/aws-samples/amazon-cognito-example-for-external-idp.git"
+  },
+  "description": "The frontend of the demo",
   "scripts": {
     "ng": "ng",
     "start": "ng serve ",
@@ -9,7 +16,6 @@
     "lint": "ng lint",
     "e2e": "ng e2e"
   },
-  "private": true,
   "dependencies": {
     "@angular/animations": "~8.2.11",
     "@angular/common": "~8.2.11",

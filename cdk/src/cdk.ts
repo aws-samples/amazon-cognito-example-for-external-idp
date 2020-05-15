@@ -128,6 +128,7 @@ export class BackendStack extends cdk.Stack {
 
     // any properties that are not part of the high level construct can be added using this method
     const userPoolCfn = userPool.node.defaultChild as CfnUserPool;
+    userPoolCfn.userPoolAddOns = { advancedSecurityMode: "ENFORCED" }
     userPoolCfn.schema = [{
       name: groupsAttributeName,
       attributeDataType: "String",
@@ -199,7 +200,7 @@ export class BackendStack extends cdk.Stack {
         ALLOWED_ORIGIN: corsOrigin,
         ADMINS_GROUP_NAME: adminsGroupName,
         USERS_GROUP_NAME: usersGroupName,
-        USER_POOL_ID: userPoolCfn.ref,
+        USER_POOL_ID: userPool.userPoolId,
         AUTHORIZATION_HEADER_NAME: authorizationHeaderName,
       },
     });
@@ -341,6 +342,8 @@ export class BackendStack extends cdk.Stack {
       allowedOAuthFlowsUserPoolClient: true,
       allowedOAuthFlows: ["code"],
       allowedOAuthScopes: ["phone", "email", "openid", "profile"],
+      explicitAuthFlows: ["ALLOW_REFRESH_TOKEN_AUTH"],
+      preventUserExistenceErrors: "ENABLED",
       generateSecret: false,
       refreshTokenValidity: 1,
       callbackUrLs: [appUrl],
@@ -417,10 +420,8 @@ export class BackendStack extends cdk.Stack {
   }
 
   private createCloudFrontDistribution(uiBucket: Bucket): CloudFrontWebDistribution {
-    const cloudFrontOia = new cloudfront.CfnCloudFrontOriginAccessIdentity(this, 'OIA', {
-      cloudFrontOriginAccessIdentityConfig: {
-        comment: `OIA for ${uiBucket.bucketName}`
-      }
+    const cloudFrontOia = new cloudfront.OriginAccessIdentity(this, 'OIA', {
+      comment: `OIA for ${uiBucket.bucketName}`
     });
 
     // create CloudFront distribution
@@ -429,19 +430,13 @@ export class BackendStack extends cdk.Stack {
         {
           s3OriginSource: {
             s3BucketSource: uiBucket,
-            originAccessIdentityId: cloudFrontOia.ref
+            originAccessIdentity: cloudFrontOia
           },
           behaviors: [{isDefaultBehavior: true}]
         }
       ]
     });
 
-    // grant read permissions to CloudFront
-    uiBucket.addToResourcePolicy(new iam.PolicyStatement({
-      actions: ["s3:GetBucket*", "s3:GetObject*", "s3:List*"],
-      resources: [uiBucket.bucketArn, uiBucket.bucketArn + "/*"],
-      principals: [new iam.CanonicalUserPrincipal(cloudFrontOia.attrS3CanonicalUserId)]
-    }));
     return distribution;
   }
 }

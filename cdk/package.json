@@ -1,13 +1,13 @@
 {
   "name": "amazon-cognito-example-for-external-idp-cdk",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "author": "Eran Medan",
   "license": "MIT-0",
   "repository": {
     "type": "git",
     "url": "git://github.com/aws-samples/amazon-cognito-example-for-external-idp.git"
   },
-  "description": "The infrastructure for the demo",
+  "description": "Example for Identity and Access Control for Custom Enterprise Applications",
   "scripts": {
     "ts-node": "ts-node",
     "tsc": "tsc",
@@ -22,22 +22,22 @@
     "generate-config": "ts-node ./src/generateConfig.ts"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.33",
-    "@types/node": "^12.11.2",
-    "aws-cdk": "^1.16.3",
-    "ts-node": "^8.4.1",
-    "typescript": "^3.7.2"
+    "@types/aws-lambda": "^8.10.51",
+    "@types/node": "^14.0.1",
+    "aws-cdk": "~1.23.0",
+    "ts-node": "^8.10.1",
+    "typescript": "^3.9.2"
   },
   "dependencies": {
-    "@aws-cdk/aws-apigateway": "^1.16.3",
-    "@aws-cdk/aws-cognito": "^1.16.3",
-    "@aws-cdk/aws-dynamodb": "^1.16.3",
-    "@aws-cdk/aws-lambda": "^1.16.3",
-    "@aws-cdk/aws-sam": "^1.16.3",
-    "@aws-cdk/aws-s3": "^1.16.3",
-    "@aws-cdk/aws-cloudfront": "^1.16.3",
-    "@aws-cdk/core": "^1.16.3",
-    "aws-sdk": "^2.552.0",
-    "source-map-support": "^0.5.13"
+    "@aws-cdk/aws-apigateway": "~1.23.0",
+    "@aws-cdk/aws-cognito": "~1.23.0",
+    "@aws-cdk/aws-dynamodb": "~1.23.0",
+    "@aws-cdk/aws-lambda": "~1.23.0",
+    "@aws-cdk/aws-sam": "~1.23.0",
+    "@aws-cdk/aws-s3": "~1.23.0",
+    "@aws-cdk/aws-cloudfront": "~1.23.0",
+    "@aws-cdk/core": "~1.23.0",
+    "aws-sdk": "^2.677.0",
+    "source-map-support": "^0.5.19"
   }
 }
