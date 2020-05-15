@@ -69,7 +69,7 @@ describe("lambda handler", () => {
 
     expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.be.undefined;
     // tslint:disable-next-line:max-line-length
-    expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.be.empty;
+    expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["test"]);
 
   });
 
@@ -92,7 +92,7 @@ describe("lambda handler", () => {
 
     expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.be.undefined;
     // tslint:disable-next-line:max-line-length
-    expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["DemoAppAdmins", "DemoAppUsers"]);
+    expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["DemoAppAdmins", "DemoAppUsers", "test"]);
     // expect(result.response.claimsOverrideDetails!.claimsToAddOrOverride).to.be.undefined;
 
   });
@@ -114,53 +114,8 @@ describe("lambda handler", () => {
 
     expect(result.response.claimsOverrideDetails!.claimsToSuppress).to.be.undefined;
     // tslint:disable-next-line:max-line-length
-    expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.be.empty;
+    expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["test", "test2"]);
     // expect(result.response.claimsOverrideDetails!.claimsToAddOrOverride).to.be.undefined;
-
-  });
-
-  it("GET success - remove idp auto generated groups", async () => {
-
-    const result = await handler({
-      "userPoolId": "us-west-2_abc",
-      "request": {
-        "userAttributes": {
-          "cognito:user_status": "EXTERNAL_PROVIDER",
-          "custom:groups": "[DemoAppAdmins, DemoAppUsers]"
-        },
-        "groupConfiguration": {
-          "groupsToOverride": ["us-west-2_abc"],
-          "iamRolesToOverride": [],
-          "preferredRole": null
-        }
-      },
-      "response": {"claimsOverrideDetails": null}
-    });
-
-    // tslint:disable-next-line:max-line-length
-    expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["DemoAppAdmins", "DemoAppUsers"]);
-
-  });
-  it("GET success - remove idp auto generated groups - one group", async () => {
-
-    const result = await handler({
-      "userPoolId": "us-west-2_abc",
-      "request": {
-        "userAttributes": {
-          "cognito:user_status": "EXTERNAL_PROVIDER",
-          "custom:groups": "DemoAppUsers"
-        },
-        "groupConfiguration": {
-          "groupsToOverride": ["us-west-2_abc"],
-          "iamRolesToOverride": [],
-          "preferredRole": null
-        }
-      },
-      "response": {"claimsOverrideDetails": null}
-    });
-
-    // tslint:disable-next-line:max-line-length
-    expect(result.response.claimsOverrideDetails!.groupOverrideDetails!.groupsToOverride).to.have.members(["DemoAppUsers"]);
 
   });
 

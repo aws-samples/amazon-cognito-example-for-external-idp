@@ -4,7 +4,7 @@ import {Express, json, Request, Response, urlencoded} from "express";
 import cors from "cors";
 import {eventContext} from "aws-serverless-express/middleware";
 
-import uuid4 from "uuid/v4";
+import {v4 as uuid4} from 'uuid';
 import {authorizationMiddleware, ForceSignOutHandler} from "./services/authorizationMiddleware";
 import {StorageService} from "./services/storageService";
 import {Pet} from "./models/pet";
