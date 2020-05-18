@@ -1,5 +1,4 @@
 import {NextFunction, Request, RequestHandler, Response} from "express";
-import {APIGatewayEventRequestContext, APIGatewayProxyEvent, AuthResponseContext, Context} from "aws-lambda";
 
 /**
  * Common claims for both id and access tokens
@@ -49,16 +48,6 @@ declare global {
       claims: Claims;
       groups: Set<string>;
       username: string;
-      apiGateway?: {
-        event: APIGatewayProxyEvent & {
-          requestContext: APIGatewayEventRequestContext & {
-            authorizer?: AuthResponseContext & {
-              claims: { [name: string]: string },
-            } | null;
-          },
-        };
-        context: Context
-      };
     }
   }
 }
