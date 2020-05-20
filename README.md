@@ -112,6 +112,7 @@ A simple Angular frontend, similar to the React example
     Since the IdP is the source of truth, and we don't want users to change attributes 
     (especially those used for authorization) on their own, this scope should not be added. 
 
+- Do not enable any non-OAuth 2.0 auth flows other than `ALLOW_REFRESH_TOKEN_AUTH` (`explicitAuthFlows` in cdk.ts) to ensure users can only use the OAuth 2.0 flows.
 
  
 # Getting Started - Mac / Linux 
