@@ -37,9 +37,8 @@ This walkthrough will help guide you through creating a working Okta Application
    * On the left side, go to **App integration** and copy the domain
    * Example: *https://yourDomainPrefix.auth.yourRegion.amazoncognito.com/saml2/idpresponse*
 11. Make sure the **Use this for Recipient URL and Destination URL** box is checked.
-12. For the **Audience URI (SP Entity ID)**, enter the urn for your Cognito user pool. 
-    * The user pool ID can be found at the top of the **General Settings** page in your Cognito user pool
-    * Example: *urn:amazon:cognito:sp:yourUserPoolID*
+12. For the **Audience URI (SP Entity ID)**, enter the urn for your Cognito user pool, which is of the form *urn:amazon:cognito:sp:`<yourUserPoolID>`*.
+    * The user pool ID can be found at the top of the **General Settings** page in your Cognito user pool, and the full urn is printed by the `deploy.sh` script after `Audience URI (SP Entity ID):`
 13. Leave the **Default RelayState** blank.
 14. Select *unspecified* for **Name ID format**.
 15. Select *Okta username* for **Application username**.
