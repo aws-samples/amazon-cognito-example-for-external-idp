@@ -186,9 +186,9 @@ Windows command-line files will be coming soon, in the meantime you can use eith
 
 ## Related Resources 
 
-AWS re:Inforce 2019: Identity and Access Control for Custom Enterprise Applications (SDD412)
-- Video: https://www.youtube.com/watch?v=VZzx15IEj7Y&t=2270s
-- Slides: https://www.slideshare.net/AmazonWebServices/identity-and-access-control-for-custom-enterprise-applications-sdd412-aws-reinforce-2019
+- AWS Security Blog Post: [Role-based access control using Amazon Cognito and an external identity provider](https://aws.amazon.com/blogs/security/role-based-access-control-using-amazon-cognito-and-an-external-identity-provider/) 
+
+- AWS re:Inforce 2019: Identity and Access Control for Custom Enterprise Applications (SDD412) [Video](https://www.youtube.com/watch?v=VZzx15IEj7Y) | [Slides](https://www.slideshare.net/AmazonWebServices/identity-and-access-control-for-custom-enterprise-applications-sdd412-aws-reinforce-2019)
 
 ## License Summary
 
