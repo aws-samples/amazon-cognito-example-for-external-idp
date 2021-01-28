@@ -1,6 +1,6 @@
 {
   "name": "amazon-cognito-example-for-external-idp-ui-angular",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "author": "Eran Medan",
   "license": "MIT-0",
   "repository": {
@@ -25,14 +25,14 @@
     "@angular/platform-browser": "~8.2.11",
     "@angular/platform-browser-dynamic": "~8.2.11",
     "@angular/router": "~8.2.11",
-    "aws-amplify": "^1.2.2",
+    "aws-amplify": "^3.3.14",
     "aws-amplify-angular": "^3.1.2",
     "rxjs": "~6.4.0",
     "tslib": "^1.10.0",
     "zone.js": "~0.9.1"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^0.1100.5",
+    "@angular-devkit/build-angular": "^0.803.29",
     "@angular/cli": "~8.3.12",
     "@angular/compiler-cli": "~8.2.11",
     "@angular/language-service": "~8.2.11",

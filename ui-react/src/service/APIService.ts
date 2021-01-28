@@ -1,7 +1,8 @@
 import {Pet} from "../model/pet";
 import {REST_API_NAME} from "../config/amplifyConfig";
-import APIClass from "@aws-amplify/api/lib/API";
-import AuthClass from "@aws-amplify/auth/lib/Auth";
+
+import { API, Auth } from "aws-amplify";
+
 
 export interface APIService {
   /**
@@ -32,7 +33,7 @@ export interface APIService {
  */
 export class HttpAPIService implements APIService {
 
-  constructor(private api: APIClass, private auth: AuthClass) {
+  constructor(private api: typeof API, private auth: typeof Auth) {
 
   }
 

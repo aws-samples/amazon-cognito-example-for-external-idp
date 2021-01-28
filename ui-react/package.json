@@ -1,6 +1,6 @@
 {
   "name": "amazon-cognito-example-for-external-idp-ui-react",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "author": "Eran Medan",
   "license": "MIT-0",
   "repository": {
@@ -9,8 +9,8 @@
   },
   "description": "The frontend of the demo",
   "dependencies": {
-    "aws-amplify": "^1.2.2",
-    "aws-amplify-react": "^2.5.2",
+    "aws-amplify": "^3.3.14",
+    "aws-amplify-react": "^4.2.18",
     "react": "^16.10.2",
     "react-dom": "^16.10.2",
     "react-scripts": "^3.4.4"
