@@ -9,11 +9,11 @@
   },
   "description": "The frontend of the demo",
   "dependencies": {
-    "aws-amplify": "^3.3.14",
+    "aws-amplify": "^3.3.26",
     "aws-amplify-react": "^4.2.18",
     "react": "^16.10.2",
     "react-dom": "^16.10.2",
-    "react-scripts": "^3.4.4"
+    "react-scripts": "^4.0.3"
   },
   "scripts": {
     "start": "react-scripts start",
