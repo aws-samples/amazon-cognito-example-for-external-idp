@@ -132,7 +132,7 @@ A simple Angular frontend, similar to the React example
 4. Run `./install.sh` which does the following:
    - Installs all node dependencies (it runs `npm install` in all relevant sub-folders)
    - Builds the project (runs `tsc -b` in each relevant sub-folder - tsc is the TypeScript compiler)
-   - Runs `cdk bootsrap` - which creates a stack named CDKToolkit (if it was not created already) that helps simplify managing assets.
+   - Runs `cdk bootstrap` - which creates a stack named CDKToolkit (if it was not created already) that helps simplify managing assets.
      For more information about assets see [here](https://docs.aws.amazon.com/cdk/latest/guide/assets.html)  
 
 
