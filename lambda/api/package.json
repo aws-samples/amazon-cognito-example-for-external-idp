@@ -13,7 +13,7 @@
     "tsc": "tsc",
     "start": "ts-node src/local.ts",
     "build": "tsc -b && copy-node-modules . dist/src",
-    "clean": "tsc -b --clean && rm -rf ./dist/src/node_modules",
+    "clean": "tsc -b --clean && rm -rf dist",
     "package": "cd dist/src && zip -r ../function.zip .",
     "watch": "tsc -w",
     "test": "mocha -r ts-node/register tests/**/*.test.ts",

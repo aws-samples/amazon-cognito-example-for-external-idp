@@ -39,8 +39,8 @@
 </nav>
 
 <div class="container-fluid">
-  <div *ngIf="model.errorMessage" (click)="model.errorMessage = null" class="alert alert-warning">{{model.errorMessage}}</div>
-  <div *ngIf="model.infoMessage" (click)="model.infoMessage = null" class="alert alert-info">{{model.infoMessage}}</div>
+  <div *ngIf="model.errorMessage" (click)="model.errorMessage = undefined" class="alert alert-warning">{{model.errorMessage}}</div>
+  <div *ngIf="model.infoMessage" (click)="model.infoMessage = undefined" class="alert alert-info">{{model.infoMessage}}</div>
 
   <div *ngIf="!model.user" class="alert alert-info">Please sign in</div>
 

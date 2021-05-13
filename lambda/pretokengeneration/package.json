@@ -13,7 +13,7 @@
     "ts-node": "ts-node",
     "build": "tsc -b",
     "watch": "tsc -w",
-    "clean": "tsc -b --clean",
+    "clean": "tsc -b --clean && rm -rf dist",
     "test": "mocha -r ts-node/register tests/**/*.test.ts",
     "testWithCoverage": "nyc -r lcov -e .ts -x \"*.test.ts\" mocha -r ts-node/register tests/**/*.test.ts && nyc report"
   },

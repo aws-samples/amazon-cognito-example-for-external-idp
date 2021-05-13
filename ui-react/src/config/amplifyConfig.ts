@@ -1,6 +1,5 @@
 // auto generated based on CloudFormation stack output values
 import autoGenConfig from './autoGenConfig';
-
 // for demonstration purposes, replace with actual URL
 
 export const REST_API_NAME = "main";

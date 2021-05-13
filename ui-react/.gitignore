@@ -34,4 +34,4 @@ dist/
 node_modules/
 aws-exports.js
 awsconfiguration.json
-src/config/autoGenConfig.js
+src/config/autoGenConfig.*

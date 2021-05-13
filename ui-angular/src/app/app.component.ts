@@ -1,6 +1,5 @@
-import {Component, NgZone, OnInit} from '@angular/core';
-import {AmplifyService} from 'aws-amplify-angular';
-import Amplify, {API, Auth} from 'aws-amplify';
+import {Component, OnInit} from '@angular/core';
+import Amplify, {API, Auth, Hub} from 'aws-amplify';
 import Axios from 'axios';
 import {User} from '../../../ui-react/src/model/user';
 import amplifyConfig from '../../../ui-react/src/config/amplifyConfig';
@@ -25,6 +24,7 @@ interface Model {
   loading: boolean;
 }
 
+// @ts-ignore
 /**
  * Our main component
  */
@@ -41,17 +41,15 @@ export class AppComponent implements OnInit {
   // ========================================================================
 
   model: Model = {
-    user: null,
-    errorMessage: null,
-    infoMessage: null,
+    user: undefined,
+    errorMessage: undefined,
+    infoMessage: undefined,
     pets: [],
-    selectedPet: null,
+    selectedPet: undefined,
     loading: false
   };
 
-  constructor(private amplifyService: AmplifyService,
-              private apiService: HttpAPIService,
-              private zone: NgZone) {
+  constructor(private apiService: HttpAPIService) {
 
 
   }
@@ -80,8 +78,8 @@ export class AppComponent implements OnInit {
 
   async signOut() {
     try {
-      this.model.pets = null;
-      this.model.user = null;
+      this.model.pets = [];
+      this.model.user = undefined;
       await this.apiService.forceSignOut();
 
     } catch (e) {
@@ -153,7 +151,7 @@ export class AppComponent implements OnInit {
 
   async loadAllPets() {
     this.model.pets = await this.getAllPets();
-    this.model.selectedPet = null;
+    this.model.selectedPet = undefined;
   }
 
 
@@ -168,13 +166,13 @@ export class AppComponent implements OnInit {
     const idp = urlParams.get(idpParamName);
 
     try {
-      this.model.user = await this.getUser();
+      this.model.user = await AppComponent.getUser();
 
       // remove identity_provider query param (not needed if signed in successfully)
       if (idp) {
         urlParams.delete(idpParamName);
         const params = urlParams.toString();
-        window.history.replaceState(null, null, window.location.pathname + (params ? '?' + params : ''));
+        window.history.replaceState(null, null as any, window.location.pathname + (params ? '?' + params : ''));
       }
 
       await this.loadAllPets();
@@ -187,55 +185,33 @@ export class AppComponent implements OnInit {
 
   }
 
-  private async getUser() {
+  private static async getUser() {
     return new User(await Auth.currentAuthenticatedUser());
   }
 
   private subscribeToAuthChanges() {
 
-    const successHandler = this.getAuthSuccessHandler();
-    const errorHandler = this.getAuthErrorHandler();
+    Hub.listen('auth', async ({payload: {event, data}}) => {
+      switch (event) {
+        case 'signIn':
+        case 'cognitoHostedUI':
+          // workaround for FF bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1422334
+          // eslint-disable-next-line
+          // noinspection SillyAssignmentJS
+          window.location.hash = window.location.hash;
+          await this.onLoad();
 
-    this.amplifyService.authStateChange$.subscribe(successHandler, errorHandler);
-  }
+          break;
+        case 'signIn_failure':
+        case 'cognitoHostedUI_failure':
+          this.model.user = undefined;
+          console.warn(data);
+          break;
+        default:
+          break;
+      }
+    });
 
-  private getAuthSuccessHandler(): (authState) => Promise<void> {
-
-    return async (authState) => {
-
-      // ensuring the code runs in the right angular zone
-      // - https://github.com/angular/angular/issues/10208#issuecomment-234749786
-      // - https://github.com/angular/zone.js/issues/830
-
-      await this.zone.run(async () => {
-        // noinspection JSRedundantSwitchStatement
-        switch (authState.state) {
-          case 'cognitoHostedUI':
-            await this.onLoad();
-            // workaround for FF bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1422334
-            // noinspection SillyAssignmentJS
-            window.location.hash = window.location.hash;
-            break;
-          default:
-            break;
-        }
-      });
-    };
-
-  }
-
-  private getAuthErrorHandler() {
-
-    return (error) => {
-      // ensuring the code runs in the right angular zone
-      // - https://github.com/angular/angular/issues/10208#issuecomment-234749786
-      // - https://github.com/angular/zone.js/issues/830
-
-      this.zone.run(() => {
-        this.model.user = null;
-        console.warn(error);
-      });
-    };
   }
 
   private registerLoadingIndicator() {

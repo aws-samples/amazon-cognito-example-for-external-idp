@@ -13,7 +13,7 @@
     "tsc": "tsc",
     "build": "tsc -b",
     "watch": "tsc -w",
-    "clean": "tsc -b --clean",
+    "clean": "tsc -b --clean && rm -rf cdk.out",
     "cdk": "cdk",
     "cdk-synth": "cdk synth",
     "cdk-diff": "cdk diff || true",

@@ -3,8 +3,10 @@ import { NgModule } from '@angular/core';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import {AmplifyAngularModule, AmplifyService} from 'aws-amplify-angular';
+
 import {FormsModule} from "@angular/forms";
+import {AmplifyUIAngularModule} from "@aws-amplify/ui-angular";
+import {CommonModule} from "@angular/common";
 
 @NgModule({
   declarations: [
@@ -13,11 +15,10 @@ import {FormsModule} from "@angular/forms";
   imports: [
     BrowserModule,
     AppRoutingModule,
-    AmplifyAngularModule,
+    AmplifyUIAngularModule,
     FormsModule
   ],
   providers: [
-    AmplifyService
   ],
   bootstrap: [AppComponent]
 })

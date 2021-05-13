@@ -21,19 +21,14 @@ fi
 
 echo "Generating UI configuration..."
 
-./config-ui.sh
+./build-ui.sh
 
-BUCKET_NAME=$(node --print "require('./ui-react/src/config/autoGenConfig.js').uiBucketName")
-APP_URL=$(node --print "require('./ui-react/src/config/autoGenConfig.js').appUrl")
+BUCKET_NAME=$(node --print "require('./ui-react/src/config/autoGenConfig.js').default.uiBucketName")
+APP_URL=$(node --print "require('./ui-react/src/config/autoGenConfig.js').default.appUrl")
 COGNITO_INSTRUCTIONS="Create some users (in the pool or your IdP) and assign them the groups 'pet-app-admins' and/or 'pet-app-users'"
 
 if [[ "${BUCKET_NAME}" != "" ]]; then
 
-  echo "Building frontend"
-
-  cd ./ui-react
-
-  npm run build &> /dev/null
 
   if [[ "${APP_FRONTEND_DEPLOY_MODE}" == "s3" ]]; then
     echo "Publishing frontend to ${BUCKET_NAME}"
