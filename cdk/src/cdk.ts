@@ -9,7 +9,7 @@ import cloudfront = require("@aws-cdk/aws-cloudfront");
 import {BillingMode, StreamViewType} from "@aws-cdk/aws-dynamodb";
 import "source-map-support/register";
 import {AuthorizationType} from "@aws-cdk/aws-apigateway";
-import {CfnUserPool, CfnUserPoolIdentityProvider, SignInType, UserPool, UserPoolAttribute} from "@aws-cdk/aws-cognito";
+import {CfnUserPool, CfnUserPoolIdentityProvider, UserPool, } from "@aws-cdk/aws-cognito";
 import {Utils} from "./utils";
 import {Runtime} from "@aws-cdk/aws-lambda";
 
@@ -121,8 +121,9 @@ export class BackendStack extends cdk.Stack {
 
     // high level construct
     const userPool: UserPool = new cognito.UserPool(this, id + "Pool", {
-      signInType: SignInType.EMAIL,
-      autoVerifiedAttributes: [UserPoolAttribute.EMAIL],
+      autoVerify: {email: true},
+      selfSignUpEnabled: true,
+      signInAliases: {email: true, username: false},
       lambdaTriggers: {preTokenGeneration: preTokenGeneration}
     });
 
