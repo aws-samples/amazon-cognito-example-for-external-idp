@@ -18,7 +18,6 @@
     "cdk-synth": "cdk synth",
     "cdk-diff": "cdk diff || true",
     "cdk-deploy": "cdk deploy",
-    "cdk-version": "cdk version",
     "cdk-bootstrap": "cdk bootstrap",
     "generate-config": "ts-node ./src/generateConfig.ts"
   },
