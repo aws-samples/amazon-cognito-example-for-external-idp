@@ -10,7 +10,8 @@ echo "Building backend "
 echo "Deploying backend stack..."
 
 # deploy the cdk stack (ignore the error in case it's due to 'No updates are to be performed')
-npm run cdk-deploy --silent --prefix cdk || true
+#npm run cdk-deploy --silent --prefix cdk || true
+npm run cdk-deploy  --prefix cdk || true
 
 STACK_STATUS=$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --region "${STACK_REGION}" --query "Stacks[].StackStatus[]" --output text)
 
@@ -35,7 +36,7 @@ if [[ "${BUCKET_NAME}" != "" ]]; then
 
     # NOTE: for development / demo purposes only, we use a public-read ACL on the frontend static files
     # in a production scenario use CloudFront and keep the s3 objects private
-    aws s3 sync --delete --acl public-read ./build/ "s3://${BUCKET_NAME}" &> /dev/null
+    aws s3 sync --delete --acl public-read ./ui-react/build/ "s3://${BUCKET_NAME}" &> /dev/null
     echo "${COGNITO_INSTRUCTIONS}"
     echo "Then visit the app at: ${APP_URL}"
   fi
@@ -44,7 +45,7 @@ if [[ "${BUCKET_NAME}" != "" ]]; then
     echo "Publishing frontend to ${BUCKET_NAME}, will be availabing via CloudFront"
 
     # since we serve from CloudFront, we can keep the objects private, so we don't pass --acl public-read here
-    aws s3 sync --delete ./build/ "s3://${BUCKET_NAME}" &> /dev/null
+    aws s3 sync --delete ./ui-react/build/ "s3://${BUCKET_NAME}" &> /dev/null
 
     echo "${COGNITO_INSTRUCTIONS}"
     echo "Then visit the app at: ${APP_URL} (may take a few minutes for the distribution to finish deployment)"
