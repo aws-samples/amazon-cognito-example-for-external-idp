@@ -12,5 +12,4 @@ local-env.sh
 /sdkPlayground/
 !/lambda/api/src/types/aws-serverless-express/index.d.ts
 /ui-react/src/config/autoGenConfig.*
-env.sh
 metadata.xml
