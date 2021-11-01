@@ -37,7 +37,7 @@ It defines the following resources
   This is the serverless compute service that runs the backend of our app (behind Amazon API Gateway). 
   requests are only forwarded if the user is authenticated and has a valid JWT token.
 - **Amazon Cognito User Pools**: Amazon Cognito lets you add user sign-up, sign-in, and access control to your web and mobile apps quickly and easily. 
-  Amazon Cognito scales to millions of users and supports sign-in with social identity providers, such as Facebook, Google, and Amazon, and enterprise identity providers via SAML 2.0.
+  Amazon Cognito scales to millions of users and supports sign-in with social identity providers, such as Facebook, Google, and Amazon, and enterprise identity providers via SAML 2.0 or OIDC (OpenID Connect).
 - **Amazon DynamoDB**: Amazon DynamoDB is a serverless key-value and document database that delivers single-digit millisecond performance at any scale.
   It is used as the persistence storage layer for our example application. 
    

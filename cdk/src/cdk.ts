@@ -36,6 +36,12 @@ export class BackendStack extends cdk.Stack {
 
     const identityProviderMetadataURLOrFile = Utils.getEnv("IDENTITY_PROVIDER_METADATA", "");
 
+    const identityProviderType = Utils.getEnv("IDENTITY_PROVIDER_TYPE", "");
+    const oidcClientId = Utils.getEnv("CLIENT-ID", "");
+    const oidcClientSecret = Utils.getEnv("CLIENT_SECRET", "");
+    const oidcUserUrl = Utils.getEnv("OIDC-USER", "");
+    const oidcMethod = Utils.getEnv("ATTRIBUTES_REQUEST_METHOD", "");
+
     const appFrontendDeployMode = Utils.getEnv("APP_FRONTEND_DEPLOY_MODE", "");
 
     const groupsAttributeName = Utils.getEnv("GROUPS_ATTRIBUTE_NAME", "groups");
@@ -305,14 +311,39 @@ export class BackendStack extends cdk.Stack {
 
     if (identityProviderMetadataURLOrFile && identityProviderName) {
 
+        cognitoIdp = new cognito.CfnUserPoolIdentityProvider(this, "CognitoIdP", {
+          providerName: identityProviderName,
+          providerDetails: Utils.isURL(identityProviderMetadataURLOrFile) ? {
+            MetadataURL: identityProviderMetadataURLOrFile
+          } : {
+            MetadataFile: identityProviderMetadataURLOrFile
+          },
+          providerType: identityProviderType,
+          // Structure: { "<cognito attribute name>": "<IdP SAML attribute name>" }
+          attributeMapping: {
+            "email": "email",
+            "family_name": "lastName",
+            "given_name": "firstName",
+            "name": "firstName", // alias to given_name
+            [groupsAttributeClaimName]: "groups" //syntax for a dynamic key
+          },
+          userPoolId: userPool.userPoolId
+        });
+
+        supportedIdentityProviders.push(identityProviderName);
+      }
+    
+    if (identityProviderType != "") {
       cognitoIdp = new cognito.CfnUserPoolIdentityProvider(this, "CognitoIdP", {
         providerName: identityProviderName,
-        providerDetails: Utils.isURL(identityProviderMetadataURLOrFile) ? {
-          MetadataURL: identityProviderMetadataURLOrFile
-        } : {
-          MetadataFile: identityProviderMetadataURLOrFile
+        providerDetails: {
+          client_id: oidcClientId,
+          attributes_request_method: oidcMethod,
+          oidc_issuer: oidcUserUrl,
+          client_secret: oidcClientSecret,
+          authorize_scopes: "email profile openid"
         },
-        providerType: "SAML",
+        providerType: identityProviderType,
         // Structure: { "<cognito attribute name>": "<IdP SAML attribute name>" }
         attributeMapping: {
           "email": "email",
@@ -326,6 +357,7 @@ export class BackendStack extends cdk.Stack {
 
       supportedIdentityProviders.push(identityProviderName);
     }
+
 
     // ========================================================================
     // Resource: Cognito App Client
