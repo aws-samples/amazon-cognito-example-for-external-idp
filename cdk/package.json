@@ -38,7 +38,7 @@
     "@aws-cdk/aws-s3": "~1.23.0",
     "@aws-cdk/aws-cloudfront": "~1.23.0",
     "@aws-cdk/core": "~1.23.0",
-    "aws-sdk": "^2.677.0",
+    "aws-sdk": "^2.814.0",
     "source-map-support": "^0.5.19"
   }
 }
