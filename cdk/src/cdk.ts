@@ -6,24 +6,29 @@ import cognito = require("@aws-cdk/aws-cognito");
 import iam = require("@aws-cdk/aws-iam");
 import s3 = require("@aws-cdk/aws-s3");
 import cloudfront = require("@aws-cdk/aws-cloudfront");
-import {BillingMode, StreamViewType} from "@aws-cdk/aws-dynamodb";
+import { BillingMode, StreamViewType } from "@aws-cdk/aws-dynamodb";
 import "source-map-support/register";
-import {AuthorizationType} from "@aws-cdk/aws-apigateway";
-import {CfnUserPool, CfnUserPoolIdentityProvider, SignInType, UserPool, UserPoolAttribute} from "@aws-cdk/aws-cognito";
-import {Utils} from "./utils";
-import {Runtime} from "@aws-cdk/aws-lambda";
+import { AuthorizationType } from "@aws-cdk/aws-apigateway";
+import {
+  CfnUserPool,
+  CfnUserPoolIdentityProvider,
+  SignInType,
+  UserPool,
+  UserPoolAttribute,
+} from "@aws-cdk/aws-cognito";
+import { Utils } from "./utils";
+import { Runtime } from "@aws-cdk/aws-lambda";
 
-import {URL} from "url";
-import {Duration} from "@aws-cdk/core";
-import {Bucket} from "@aws-cdk/aws-s3";
-import {CloudFrontWebDistribution} from "@aws-cdk/aws-cloudfront";
+import { URL } from "url";
+import { Duration } from "@aws-cdk/core";
+import { Bucket } from "@aws-cdk/aws-s3";
+import { CloudFrontWebDistribution } from "@aws-cdk/aws-cloudfront";
 
 /**
  * Define a CloudFormation stack that creates a serverless application with
  * Amazon Cognito and an external SAML based IdP
  */
 export class BackendStack extends cdk.Stack {
-
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
@@ -34,7 +39,10 @@ export class BackendStack extends cdk.Stack {
     const domain = Utils.getEnv("COGNITO_DOMAIN_NAME");
     const identityProviderName = Utils.getEnv("IDENTITY_PROVIDER_NAME", "");
 
-    const identityProviderMetadataURLOrFile = Utils.getEnv("IDENTITY_PROVIDER_METADATA", "");
+    const identityProviderMetadataURLOrFile = Utils.getEnv(
+      "IDENTITY_PROVIDER_METADATA",
+      ""
+    );
 
     const appFrontendDeployMode = Utils.getEnv("APP_FRONTEND_DEPLOY_MODE", "");
 
@@ -42,7 +50,7 @@ export class BackendStack extends cdk.Stack {
     const adminsGroupName = Utils.getEnv("ADMINS_GROUP_NAME", "pet-app-admins");
     const usersGroupName = Utils.getEnv("USERS_GROUP_NAME", "pet-app-users");
     const lambdaMemory = parseInt(Utils.getEnv("LAMBDA_MEMORY", "128"));
-    const nodeRuntime: Runtime = lambda.Runtime.NODEJS_10_X;
+    const nodeRuntime: Runtime = lambda.Runtime.NODEJS_12_X;
     const authorizationHeaderName = "Authorization";
     const groupsAttributeClaimName = "custom:" + groupsAttributeName;
 
@@ -58,8 +66,7 @@ export class BackendStack extends cdk.Stack {
     let uiBucketName: string | undefined = undefined;
     let corsOrigin: string | undefined = undefined;
     if (isModeS3 || isModeCloudfront) {
-
-      const uiBucket: Bucket = new s3.Bucket(this, 'UIBucket');
+      const uiBucket: Bucket = new s3.Bucket(this, "UIBucket");
       uiBucketName = uiBucket.bucketName;
 
       if (isModeS3) {
@@ -118,26 +125,27 @@ export class BackendStack extends cdk.Stack {
     // - https://aws.amazon.com/cognito/
     // - https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.CfnIdentityPool.html
 
-
     // high level construct
     const userPool: UserPool = new cognito.UserPool(this, id + "Pool", {
       signInType: SignInType.EMAIL,
       autoVerifiedAttributes: [UserPoolAttribute.EMAIL],
-      lambdaTriggers: {preTokenGeneration: preTokenGeneration}
+      lambdaTriggers: { preTokenGeneration: preTokenGeneration },
     });
 
     // any properties that are not part of the high level construct can be added using this method
     const userPoolCfn = userPool.node.defaultChild as CfnUserPool;
-    userPoolCfn.userPoolAddOns = { advancedSecurityMode: "ENFORCED" }
-    userPoolCfn.schema = [{
-      name: groupsAttributeName,
-      attributeDataType: "String",
-      mutable: true,
-      required: false,
-      stringAttributeConstraints: {
-        maxLength: "2000"
-      }
-    }];
+    userPoolCfn.userPoolAddOns = { advancedSecurityMode: "ENFORCED" };
+    userPoolCfn.schema = [
+      {
+        name: groupsAttributeName,
+        attributeDataType: "String",
+        mutable: true,
+        required: false,
+        stringAttributeConstraints: {
+          maxLength: "2000",
+        },
+      },
+    ];
 
     // create two groups, one for admins one for users
     // these groups can be used without configuring a 3rd party IdP
@@ -145,7 +153,6 @@ export class BackendStack extends cdk.Stack {
     new cognito.CfnUserPoolGroup(this, "AdminsGroup", {
       groupName: adminsGroupName,
       userPoolId: userPool.userPoolId,
-
     });
 
     new cognito.CfnUserPoolGroup(this, "UsersGroup", {
@@ -167,14 +174,14 @@ export class BackendStack extends cdk.Stack {
       billingMode: BillingMode.PAY_PER_REQUEST,
       serverSideEncryption: true,
       stream: StreamViewType.NEW_AND_OLD_IMAGES,
-      partitionKey: {name: "id", type: dynamodb.AttributeType.STRING}
+      partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
     });
 
     const usersTable = new dynamodb.Table(this, "UsersTable", {
       billingMode: BillingMode.PAY_PER_REQUEST,
       serverSideEncryption: true,
       stream: StreamViewType.NEW_AND_OLD_IMAGES,
-      partitionKey: {name: "username", type: dynamodb.AttributeType.STRING},
+      partitionKey: { name: "username", type: dynamodb.AttributeType.STRING },
       timeToLiveAttribute: "ttl",
     });
 
@@ -211,16 +218,15 @@ export class BackendStack extends cdk.Stack {
 
     // for Cfn building blocks, we need to create the policy
     // in here we allow us to do a global sign out from the backend, to avoid having to give users a stronger scope
-    apiFunction.addToRolePolicy(new iam.PolicyStatement(
-      {
+    apiFunction.addToRolePolicy(
+      new iam.PolicyStatement({
         resources: [userPool.userPoolArn],
         actions: [
           "cognito-idp:AdminUserGlobalSignOut",
-          "cognito-idp:AdminGetUser"
-        ]
+          "cognito-idp:AdminGetUser",
+        ],
       })
     );
-
 
     // ========================================================================
     // Resource: Amazon API Gateway - API endpoints
@@ -239,7 +245,7 @@ export class BackendStack extends cdk.Stack {
     const integration = new apigateway.LambdaIntegration(apiFunction, {
       // lambda proxy integration:
       // see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-create-api-as-simple-proxy
-      proxy: true
+      proxy: true,
     });
 
     // ------------------------------------------------------------------------
@@ -252,7 +258,7 @@ export class BackendStack extends cdk.Stack {
 
       identitySource: "method.request.header." + authorizationHeaderName,
       restApiId: api.restApiId,
-      providerArns: [userPool.userPoolArn]
+      providerArns: [userPool.userPoolArn],
     });
 
     // ------------------------------------------------------------------------
@@ -272,10 +278,8 @@ export class BackendStack extends cdk.Stack {
     const proxyResource = rootResource.addResource("{proxy+}");
 
     const method = proxyResource.addMethod("ANY", integration, {
-
-      authorizer: {authorizerId: cfnAuthorizer.ref},
+      authorizer: { authorizerId: cfnAuthorizer.ref },
       authorizationType: AuthorizationType.COGNITO,
-
     });
 
     // uncomment to use an access token instead of an id token
@@ -304,24 +308,25 @@ export class BackendStack extends cdk.Stack {
     let cognitoIdp: CfnUserPoolIdentityProvider | undefined = undefined;
 
     if (identityProviderMetadataURLOrFile && identityProviderName) {
-
       cognitoIdp = new cognito.CfnUserPoolIdentityProvider(this, "CognitoIdP", {
         providerName: identityProviderName,
-        providerDetails: Utils.isURL(identityProviderMetadataURLOrFile) ? {
-          MetadataURL: identityProviderMetadataURLOrFile
-        } : {
-          MetadataFile: identityProviderMetadataURLOrFile
-        },
+        providerDetails: Utils.isURL(identityProviderMetadataURLOrFile)
+          ? {
+              MetadataURL: identityProviderMetadataURLOrFile,
+            }
+          : {
+              MetadataFile: identityProviderMetadataURLOrFile,
+            },
         providerType: "SAML",
         // Structure: { "<cognito attribute name>": "<IdP SAML attribute name>" }
         attributeMapping: {
-          "email": "email",
-          "family_name": "lastName",
-          "given_name": "firstName",
-          "name": "firstName", // alias to given_name
-          [groupsAttributeClaimName]: "groups" //syntax for a dynamic key
+          email: "email",
+          family_name: "lastName",
+          given_name: "firstName",
+          name: "firstName", // alias to given_name
+          [groupsAttributeClaimName]: "groups", //syntax for a dynamic key
         },
-        userPoolId: userPool.userPoolId
+        userPoolId: userPool.userPoolId,
       });
 
       supportedIdentityProviders.push(identityProviderName);
@@ -336,20 +341,24 @@ export class BackendStack extends cdk.Stack {
     // See also:
     // - https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-client-apps.html
 
-    const cfnUserPoolClient = new cognito.CfnUserPoolClient(this, "CognitoAppClient", {
-      supportedIdentityProviders: supportedIdentityProviders,
-      clientName: "Web",
-      allowedOAuthFlowsUserPoolClient: true,
-      allowedOAuthFlows: ["code"],
-      allowedOAuthScopes: ["phone", "email", "openid", "profile"],
-      explicitAuthFlows: ["ALLOW_REFRESH_TOKEN_AUTH"],
-      preventUserExistenceErrors: "ENABLED",
-      generateSecret: false,
-      refreshTokenValidity: 1,
-      callbackUrLs: [appUrl],
-      logoutUrLs: [appUrl],
-      userPoolId: userPool.userPoolId
-    });
+    const cfnUserPoolClient = new cognito.CfnUserPoolClient(
+      this,
+      "CognitoAppClient",
+      {
+        supportedIdentityProviders: supportedIdentityProviders,
+        clientName: "Web",
+        allowedOAuthFlowsUserPoolClient: true,
+        allowedOAuthFlows: ["code"],
+        allowedOAuthScopes: ["phone", "email", "openid", "profile"],
+        explicitAuthFlows: ["ALLOW_REFRESH_TOKEN_AUTH"],
+        preventUserExistenceErrors: "ENABLED",
+        generateSecret: false,
+        refreshTokenValidity: 1,
+        callbackUrLs: [appUrl],
+        logoutUrLs: [appUrl],
+        userPoolId: userPool.userPoolId,
+      }
+    );
 
     // we want to make sure we do things in the right order
     if (cognitoIdp) {
@@ -365,11 +374,14 @@ export class BackendStack extends cdk.Stack {
     // See also:
     // https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-assign-domain.html
 
-    const cfnUserPoolDomain = new cognito.CfnUserPoolDomain(this, "CognitoDomain", {
-      domain: domain,
-      userPoolId: userPool.userPoolId
-    });
-
+    const cfnUserPoolDomain = new cognito.CfnUserPoolDomain(
+      this,
+      "CognitoDomain",
+      {
+        domain: domain,
+        userPoolId: userPool.userPoolId,
+      }
+    );
 
     // ========================================================================
     // Stack Outputs
@@ -378,64 +390,70 @@ export class BackendStack extends cdk.Stack {
     // Publish the custom resource output
     new cdk.CfnOutput(this, "APIUrlOutput", {
       description: "API URL",
-      value: api.url
+      value: api.url,
     });
 
     new cdk.CfnOutput(this, "UserPoolIdOutput", {
       description: "UserPool ID",
-      value: userPool.userPoolId
+      value: userPool.userPoolId,
     });
 
     new cdk.CfnOutput(this, "AppClientIdOutput", {
       description: "App Client ID",
-      value: cfnUserPoolClient.ref
+      value: cfnUserPoolClient.ref,
     });
 
     new cdk.CfnOutput(this, "RegionOutput", {
       description: "Region",
-      value: this.region
+      value: this.region,
     });
 
     new cdk.CfnOutput(this, "CognitoDomainOutput", {
       description: "Cognito Domain",
-      value: cfnUserPoolDomain.domain
+      value: cfnUserPoolDomain.domain,
     });
 
     new cdk.CfnOutput(this, "LambdaFunctionName", {
       description: "Lambda Function Name",
-      value: apiFunction.functionName
+      value: apiFunction.functionName,
     });
 
     new cdk.CfnOutput(this, "AppUrl", {
       description: "The frontend app's URL",
-      value: appUrl
+      value: appUrl,
     });
 
     if (uiBucketName) {
       new cdk.CfnOutput(this, "UIBucketName", {
         description: "The frontend app's bucket name",
-        value: uiBucketName
+        value: uiBucketName,
       });
     }
   }
 
-  private createCloudFrontDistribution(uiBucket: Bucket): CloudFrontWebDistribution {
-    const cloudFrontOia = new cloudfront.OriginAccessIdentity(this, 'OIA', {
-      comment: `OIA for ${uiBucket.bucketName}`
+  private createCloudFrontDistribution(
+    uiBucket: Bucket
+  ): CloudFrontWebDistribution {
+    const cloudFrontOia = new cloudfront.OriginAccessIdentity(this, "OIA", {
+      comment: `OIA for ${uiBucket.bucketName}`,
     });
 
     // create CloudFront distribution
-    const distribution = new cloudfront.CloudFrontWebDistribution(this, 'UIDistribution', {
-      originConfigs: [
-        {
-          s3OriginSource: {
-            s3BucketSource: uiBucket,
-            originAccessIdentity: cloudFrontOia
+    const distribution = new cloudfront.CloudFrontWebDistribution(
+      this,
+      "UIDistribution",
+      {
+        originConfigs: [
+          {
+            s3OriginSource: {
+              s3BucketSource: uiBucket,
+              originAccessIdentity: cloudFrontOia,
+            },
+            behaviors: [{ isDefaultBehavior: true }],
           },
-          behaviors: [{isDefaultBehavior: true}]
-        }
-      ]
-    });
+        ],
+      }
+    );
 
     return distribution;
   }
@@ -453,7 +471,7 @@ const stackRegion = Utils.getEnv("STACK_REGION");
 // you deploy stacks to production.
 // see https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html
 
-const stackProps = {env: {region: stackRegion, account: stackAccount}};
+const stackProps = { env: { region: stackRegion, account: stackAccount } };
 const backendStack = new BackendStack(app, stackName, stackProps);
 
 backendStack.templateOptions.transforms = ["AWS::Serverless-2016-10-31"];
