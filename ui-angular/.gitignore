@@ -46,3 +46,4 @@ testem.log
 Thumbs.db
 
 autoGenConfig.ts
+.angular/cache/
