@@ -109,5 +109,8 @@
       }
     }
   },
-  "defaultProject": "ui-angular"
+  "defaultProject": "ui-angular",
+  "cli": {
+    "analytics": false
+  }
 }
