@@ -15,3 +15,4 @@ local-env.sh
 env.sh
 metadata.xml
 ui-angular/.angular/
+.angular/cache/
