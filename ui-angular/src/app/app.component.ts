@@ -1,10 +1,10 @@
-import {Component, OnInit} from '@angular/core';
-import Amplify, {API, Auth, Hub} from 'aws-amplify';
-import Axios from 'axios';
-import {User} from '../../../ui-react/src/model/user';
-import amplifyConfig from '../../../ui-react/src/config/amplifyConfig';
-import {Pet} from '../../../ui-react/src/model/pet';
-import {HttpAPIService} from '../../../ui-react/src/service/APIService';
+import { Component, OnInit } from "@angular/core";
+import Amplify, { API, Auth, Hub } from "aws-amplify";
+import Axios from "axios";
+import { User } from "../../../ui-react/src/model/user";
+import amplifyConfig from "../../../ui-react/src/config/amplifyConfig";
+import { Pet } from "../../../ui-react/src/model/pet";
+import { HttpAPIService } from "../../../ui-react/src/service/APIService";
 
 // create-react-app doesn't allow importing outside of the src folder (without some workarounds),
 // but Angular doesn't have this restriction, so for staying DRY
@@ -29,13 +29,17 @@ interface Model {
  * Our main component
  */
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss'],
-  providers: [{provide: HttpAPIService, useFactory: () => new HttpAPIService(API, Auth)}],
+  selector: "app-root",
+  templateUrl: "./app.component.html",
+  styleUrls: ["./app.component.scss"],
+  providers: [
+    {
+      provide: HttpAPIService,
+      useFactory: () => new HttpAPIService(API, Auth),
+    },
+  ],
 })
 export class AppComponent implements OnInit {
-
   // ========================================================================
   // Public Members
   // ========================================================================
@@ -46,13 +50,10 @@ export class AppComponent implements OnInit {
     infoMessage: undefined,
     pets: [],
     selectedPet: undefined,
-    loading: false
+    loading: false,
   };
 
-  constructor(private apiService: HttpAPIService) {
-
-
-  }
+  constructor(private apiService: HttpAPIService) {}
 
   // ========================================================================
   // Public methods
@@ -73,7 +74,9 @@ export class AppComponent implements OnInit {
   }
 
   async signIn(idpName?: string) {
-    await Auth.federatedSignIn(idpName ? {customProvider: idpName} : undefined);
+    await Auth.federatedSignIn(
+      idpName ? { customProvider: idpName } : undefined
+    );
   }
 
   async signOut() {
@@ -81,12 +84,10 @@ export class AppComponent implements OnInit {
       this.model.pets = [];
       this.model.user = undefined;
       await this.apiService.forceSignOut();
-
-    } catch (e) {
-      this.model.errorMessage = 'Failed to sign out. ' + e.message;
+    } catch (e: any) {
+      this.model.errorMessage = "Failed to sign out. " + e.message;
     }
   }
-
 
   // ------------------------------------------------------------------------
   // CRUD operations
@@ -95,45 +96,43 @@ export class AppComponent implements OnInit {
   async getAllPets() {
     try {
       return await this.apiService.getAllPets();
-    } catch (e) {
+    } catch (e: any) {
       console.warn(e);
-      this.model.errorMessage = 'Failed to get pets. ' + e.message;
+      this.model.errorMessage = "Failed to get pets. " + e.message;
       return [];
     }
   }
 
   async savePet() {
-
     const pet = this.model.selectedPet;
 
     if (!pet) {
-      this.model.errorMessage = 'Pet is needed';
+      this.model.errorMessage = "Pet is needed";
       return;
     }
     try {
       await this.apiService.savePet(pet);
       await this.loadAllPets();
-    } catch (e) {
-      this.model.errorMessage = 'Failed to save pet. ' + e.message;
+    } catch (e: any) {
+      this.model.errorMessage = "Failed to save pet. " + e.message;
     }
   }
 
   async deletePet() {
-
-    if (!window.confirm('Are you sure?')) {
+    if (!window.confirm("Are you sure?")) {
       return;
     }
     const pet = this.model.selectedPet;
 
     if (!pet) {
-      this.model.errorMessage = 'Pet is needed';
+      this.model.errorMessage = "Pet is needed";
       return;
     }
     try {
       await this.apiService.deletePet(pet);
       await this.loadAllPets();
-    } catch (e) {
-      this.model.errorMessage = 'Failed to delete pet. ' + e.message;
+    } catch (e: any) {
+      this.model.errorMessage = "Failed to delete pet. " + e.message;
     }
   }
 
@@ -154,15 +153,13 @@ export class AppComponent implements OnInit {
     this.model.selectedPet = undefined;
   }
 
-
   // ========================================================================
   // Private methods
   // ========================================================================
 
   private async onLoad() {
-
     const urlParams = new URLSearchParams(window.location.search);
-    const idpParamName = 'identity_provider';
+    const idpParamName = "identity_provider";
     const idp = urlParams.get(idpParamName);
 
     try {
@@ -172,17 +169,19 @@ export class AppComponent implements OnInit {
       if (idp) {
         urlParams.delete(idpParamName);
         const params = urlParams.toString();
-        window.history.replaceState(null, null as any, window.location.pathname + (params ? '?' + params : ''));
+        window.history.replaceState(
+          null,
+          null as any,
+          window.location.pathname + (params ? "?" + params : "")
+        );
       }
 
       await this.loadAllPets();
     } catch (e) {
-
-      if (e === 'not authenticated' && idp) {
+      if (e === "not authenticated" && idp) {
         await this.signIn(idp);
       }
     }
-
   }
 
   private static async getUser() {
@@ -190,11 +189,10 @@ export class AppComponent implements OnInit {
   }
 
   private subscribeToAuthChanges() {
-
-    Hub.listen('auth', async ({payload: {event, data}}) => {
+    Hub.listen("auth", async ({ payload: { event, data } }) => {
       switch (event) {
-        case 'signIn':
-        case 'cognitoHostedUI':
+        case "signIn":
+        case "cognitoHostedUI":
           // workaround for FF bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1422334
           // eslint-disable-next-line
           // noinspection SillyAssignmentJS
@@ -202,8 +200,8 @@ export class AppComponent implements OnInit {
           await this.onLoad();
 
           break;
-        case 'signIn_failure':
-        case 'cognitoHostedUI_failure':
+        case "signIn_failure":
+        case "cognitoHostedUI_failure":
           this.model.user = undefined;
           console.warn(data);
           break;
@@ -211,25 +209,30 @@ export class AppComponent implements OnInit {
           break;
       }
     });
-
   }
 
   private registerLoadingIndicator() {
     // show a loading indicator automatically
-    Axios.interceptors.request.use(config => {
-      this.model.loading = true;
-      return config;
-    }, error => {
-      this.model.loading = false;
-      return Promise.reject(error);
-    });
+    Axios.interceptors.request.use(
+      (config) => {
+        this.model.loading = true;
+        return config;
+      },
+      (error) => {
+        this.model.loading = false;
+        return Promise.reject(error);
+      }
+    );
 
-    Axios.interceptors.response.use(response => {
-      this.model.loading = false;
-      return response;
-    }, error => {
-      this.model.loading = false;
-      return Promise.reject(error);
-    });
+    Axios.interceptors.response.use(
+      (response) => {
+        this.model.loading = false;
+        return response;
+      },
+      (error) => {
+        this.model.loading = false;
+        return Promise.reject(error);
+      }
+    );
   }
 }
