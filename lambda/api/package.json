@@ -32,7 +32,7 @@
     "chai": "^4.2.0",
     "copy-node-modules": "^1.1.1",
     "dynamodb-local": "^0.0.31",
-    "mocha": "^7.1.2",
+    "mocha": "^10.1.0",
     "nyc": "^15.0.1",
     "ts-node": "^8.10.1",
     "tslint": "^6.1.2",
