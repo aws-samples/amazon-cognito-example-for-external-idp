@@ -3,8 +3,14 @@
 set -e
 source ./env.sh
 
-npm run build --prefix lambda/api
-npm run build --prefix lambda/pretokengeneration
-npm run build --prefix cdk
-
+cd lambda
+cd api
+npm run build
+cd ..
+cd pretokengeneration
+npm run build
+cd ../..
+cd cdk
+npm run build 
+cd ..
 echo "Build successful"

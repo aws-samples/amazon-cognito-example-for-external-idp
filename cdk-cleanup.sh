@@ -4,4 +4,6 @@ set -e
 source ./env.sh
 
 echo "Destroying CDK Cloudformation Stack  -- Some manual removal required"
-npm run cdk-destroy --prefix cdk 
+cd cdk
+npm run cdk-destroy
+cd ..
