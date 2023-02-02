@@ -6,13 +6,23 @@ source ./env.sh
 echo "this will perform npm audit --fix on all packages"
 
 echo "folder: lambda/api"
-npm audit fix --prefix lambda/api
+cd lambda
+cd api
+npm audit fix 
 echo "folder: lambda/pretokengeneration"
-npm audit fix --prefix lambda/pretokengeneration
+cd ..
+cd pretokengeneration
+npm audit fix
+cd ../..
 echo "folder: cdk"
-npm audit fix --prefix cdk
+cd cdk
+npm audit fix
+cd ..
 echo "folder: ui-react"
-npm audit fix --prefix ui-react
+cd ui-react
+npm audit fix
+cd ..
 echo "folder: ui-angular"
-npm audit fix --prefix ui-angular
-
+cd ui-angular
+npm audit fix
+cd ..

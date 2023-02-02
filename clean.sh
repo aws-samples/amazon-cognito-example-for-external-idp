@@ -1,12 +1,23 @@
 #!/usr/bin/env bash
 
 echo "folder: lambda/api"
-npm run clean --prefix lambda/api && rm -rf lambda/api/node_modules
+cd lambda
+cd api
+npm run clean && rm -rf node_modules
+cd ..
+cd pretokengeneration
 echo "folder: lambda/pretokengeneration"
-npm run clean --prefix lambda/pretokengeneration && rm -rf lambda/pretokengeneration/node_modules
+npm run clean && rm -rf node_modules
 echo "folder: cdk"
-npm run clean --prefix cdk && rm -rf cdk/node_modules
+cd ../..
+cd cdk
+npm run clean && rm -rf node_modules
+cd ..
 echo "folder: ui-react"
-npm run clean --prefix ui-react && rm -rf ui-react/node_modules
+cd ui-react
+npm run clean && rm -rf node_modules
+cd ..
+cd ui-angular
 echo "folder: ui-angular"
-npm run clean --prefix ui-angular && rm -rf ui-angular/node_modules
+npm run clean && rm -rf node_modules
+cd ..

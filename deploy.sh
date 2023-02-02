@@ -10,8 +10,9 @@ echo "Building backend "
 echo "Deploying backend stack..."
 
 # deploy the cdk stack (ignore the error in case it's due to 'No updates are to be performed')
-npm run cdk-deploy --silent --prefix cdk || true
-
+cd cdk
+npm run cdk-deploy --silent || true
+cd ..
 STACK_STATUS=$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --region "${STACK_REGION}" --query "Stacks[].StackStatus[]" --output text)
 
 if [[ "${STACK_STATUS}" != "CREATE_COMPLETE" && "${STACK_STATUS}" != "UPDATE_COMPLETE" ]]; then

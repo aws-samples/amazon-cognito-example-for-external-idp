@@ -5,11 +5,15 @@ source ./env.sh
 
 
 echo "Generating config for UI based on stack outputs"
-
-npm run generate-config --prefix cdk -- "${STACK_NAME}" "${STACK_REGION}" ../ui-react/src/config/autoGenConfig.ts
-
+cd cdk
+npm run generate-config -- "${STACK_NAME}" "${STACK_REGION}" ../ui-react/src/config/autoGenConfig.ts
+cd ..
 echo "Building UIs"
 
-npm run compile-config --prefix ui-react
-npm run build --prefix ui-react
-npm run build --prefix ui-angular
+cd ui-react
+npm run compile-config
+npm run build
+cd ..
+cd ui-angular
+npm run build 
+cd ..
