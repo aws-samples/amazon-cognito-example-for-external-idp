@@ -28,7 +28,7 @@
     "@types/mocha": "^7.0.2",
     "@types/node": "^14.0.1",
     "@types/uuid": "^7.0.3",
-    "aws-sdk": "^2.677.0",
+    "aws-sdk": "^2.1354.0",
     "chai": "^4.2.0",
     "copy-node-modules": "^1.1.1",
     "dynamodb-local": "^0.0.31",
