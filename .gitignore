@@ -14,5 +14,3 @@ local-env.sh
 /ui-react/src/config/autoGenConfig.*
 env.sh
 metadata.xml
-ui-angular/.angular/
-.angular/cache/

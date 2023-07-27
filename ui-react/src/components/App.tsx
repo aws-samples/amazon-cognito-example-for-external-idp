@@ -278,7 +278,7 @@ class App extends Component<AppProps, State> {
 
       await this.getAllPets();
     } catch (e) {
-      this.setState({error: "Failed to save pet. " + e.message, loading: false});
+      this.setState({error: "Failed to save pet. " + e, loading: false});
     }
   }
 
@@ -298,7 +298,7 @@ class App extends Component<AppProps, State> {
       await this.apiService.deletePet(pet);
       return this.getAllPets();
     } catch (e) {
-      this.setState({error: "Failed to save pet. " + e.message, loading: false});
+      this.setState({error: "Failed to save pet. " + e, loading: false});
     }
   }
 

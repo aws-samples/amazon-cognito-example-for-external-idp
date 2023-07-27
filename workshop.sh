@@ -1,11 +1,57 @@
 #!/usr/bin/env bash
 
-set -e
-source ./env.sh
+export AWS_SDK_LOAD_CONFIG=1 # allows the SDK to load from config. see https://github.com/aws/aws-sdk-js/pull/1391
+export STACK_NAME=ExternalIdPDemo
+export STACK_ACCOUNT=$(aws sts get-caller-identity --query "Account" --output text)
+export STACK_REGION=$(aws configure get region)
+export COGNITO_DOMAIN_NAME=auth-${STACK_ACCOUNT}-${STACK_REGION}
+export APP_FRONTEND_DEPLOY_MODE=cloudfront
+
+echo "this will run npm install in all relevant sub-folders, build the project, and install the CDK toolkit"
+
+cd lambda
+cd api
+npm install
+cd ..
+cd pretokengeneration
+npm install
+cd ../..
+cd cdk
+npm install
+cd ..
+cd ui-react
+npm install
+cd ..
+
+cd lambda
+cd api
+npm run build
+cd ..
+cd pretokengeneration
+npm run build
+cd ../..
+cd cdk
+npm run build 
+cd ..
+echo "Build successful"
+
+cd cdk
+npm run cdk -- bootstrap
+cd ..
 
 echo "Building backend "
 
-./build.sh
+cd lambda
+cd api
+npm run build
+cd ..
+cd pretokengeneration
+npm run build
+cd ../..
+cd cdk
+npm run build 
+cd ..
+echo "Build successful"
 
 echo "Deploying backend stack..."
 
@@ -22,7 +68,16 @@ fi
 
 echo "Generating UI configuration..."
 
-./build-ui.sh
+echo "Generating config for UI based on stack outputs"
+cd cdk
+npm run generate-config -- "${STACK_NAME}" "${STACK_REGION}" ../ui-react/src/config/autoGenConfig.ts
+cd ..
+echo "Building UIs"
+
+cd ui-react
+npm run compile-config
+npm run build
+cd ..
 
 BUCKET_NAME=$(node --print "require('./ui-react/src/config/autoGenConfig.js').default.uiBucketName")
 APP_URL=$(node --print "require('./ui-react/src/config/autoGenConfig.js').default.appUrl")

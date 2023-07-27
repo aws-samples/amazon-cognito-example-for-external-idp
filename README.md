@@ -99,10 +99,6 @@ AWS Amplify can manage all aspects of a project, but since we used AWS CDK, we f
   group membership information can be used for example for hiding/graying out sections that the user has no permission for.
   This is not used for enforcing authorization or validation of the token, but it provides a nicer user experience where actions that the user will not be permitted to perform are not visible / grayed out for them.
 
-### /ui-angular
-
-A simple Angular frontend, similar to the React example
-
 ## Notes
 
 - Do not add the `aws.cognito.signin.user.admin` scope, (not added by default)
@@ -147,10 +143,6 @@ NOTES:
 
 - `cd ui-react && npm start` to run the UI in http://localhost:3000
 
-### Angular
-
-- `cd ui-angular && npm start` to run the UI in http://localhost:3000 (using the same port for simplicity)
-
 ## Other Commands
 
 - Run `./diff.sh` to compare deployed stack with current state
@@ -185,6 +177,9 @@ Windows command-line files will be coming soon, in the meantime you can use eith
 - AWS Security Blog Post: [Role-based access control using Amazon Cognito and an external identity provider](https://aws.amazon.com/blogs/security/role-based-access-control-using-amazon-cognito-and-an-external-identity-provider/)
 
 - AWS re:Inforce 2019: Identity and Access Control for Custom Enterprise Applications (SDD412) [Video](https://www.youtube.com/watch?v=VZzx15IEj7Y) | [Slides](https://www.slideshare.net/AmazonWebServices/identity-and-access-control-for-custom-enterprise-applications-sdd412-aws-reinforce-2019)
+
+## Previous Versions
+Please note, Angular support was removed from this repo to simplify maintenance activities, currently only the react UI is supported. You can view the old Angular UI on the [Angular Archive branch](https://github.com/aws-samples/amazon-cognito-example-for-external-idp/tree/angular-archive) (this is static and receives no security updates)
 
 ## License Summary
 

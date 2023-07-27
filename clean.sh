@@ -17,7 +17,3 @@ echo "folder: ui-react"
 cd ui-react
 npm run clean && rm -rf node_modules
 cd ..
-cd ui-angular
-echo "folder: ui-angular"
-npm run clean && rm -rf node_modules
-cd ..

@@ -22,7 +22,3 @@ echo "folder: ui-react"
 cd ui-react
 npm audit fix
 cd ..
-echo "folder: ui-angular"
-cd ui-angular
-npm audit fix
-cd ..

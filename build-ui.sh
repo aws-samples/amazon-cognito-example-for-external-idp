@@ -14,6 +14,3 @@ cd ui-react
 npm run compile-config
 npm run build
 cd ..
-cd ui-angular
-npm run build 
-cd ..

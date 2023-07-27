@@ -18,9 +18,6 @@ cd ..
 cd ui-react
 npm install
 cd ..
-cd ui-angular
-npm install
-cd ..
 
 ./build.sh
 
