@@ -4,7 +4,7 @@ import './index.css';
 import App from './components/App';
 import * as serviceWorker from './serviceWorker';
 import {HttpAPIService} from "./service/APIService";
-import Amplify, {API, Auth} from 'aws-amplify';
+import {Amplify, API, Auth} from 'aws-amplify';
 import amplifyConfig from './config/amplifyConfig';
 
 Amplify.configure(amplifyConfig);

@@ -9,8 +9,8 @@
   },
   "description": "The frontend of the demo",
   "dependencies": {
-    "@aws-amplify/ui-react": "^1.2.26",
-    "aws-amplify": "^4.3.26",
+    "@aws-amplify/ui-react": "^5.0.6",
+    "aws-amplify": "^5.3.5",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
     "react-scripts": "^5.0.1"
@@ -35,10 +35,14 @@
   "devDependencies": {
     "@types/chai": "^4.2.3",
     "@types/jest": "^24.0.19",
-    "@types/node": "^12.11.2",
+    "@types/node": "^20.4.5",
     "@types/react": "^16.14.6",
     "@types/react-dom": "^16.9.12",
     "chai": "^4.2.0",
-    "typescript": "~4.2.3"
+    "fork-ts-checker-webpack-plugin": "^6.5.3",
+    "typescript": "^5.1.6"
+  },
+  "overrides": {
+    "typescript": "^5.1.6"
   }
 }
