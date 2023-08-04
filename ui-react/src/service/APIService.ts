@@ -37,7 +37,7 @@ export class HttpAPIService implements APIService {
    */
   public async getAllPets(): Promise<Pet[]> {
     const authorizationHeader = await this.getAuthorizationHeader();
-    return await this.api.get(REST_API_NAME, "/pets", {
+    return await this.api.get(REST_API_NAME, "pets", {
       headers: authorizationHeader,
     });
   }
@@ -49,12 +49,12 @@ export class HttpAPIService implements APIService {
   public async savePet(pet: Pet) {
     const authorizationHeader = await this.getAuthorizationHeader();
     if (pet.id) {
-      await this.api.put(REST_API_NAME, `/pets/${pet.id}`, {
+      await this.api.put(REST_API_NAME, `pets/${pet.id}`, {
         body: pet,
         headers: authorizationHeader,
       });
     } else {
-      await this.api.post(REST_API_NAME, "/pets", {
+      await this.api.post(REST_API_NAME, "pets", {
         body: pet,
         headers: authorizationHeader,
       });
@@ -67,7 +67,7 @@ export class HttpAPIService implements APIService {
    */
   public async deletePet(pet: Pet): Promise<void> {
     const authorizationHeader = await this.getAuthorizationHeader();
-    await this.api.del(REST_API_NAME, `/pets/${pet.id}`, {
+    await this.api.del(REST_API_NAME, `pets/${pet.id}`, {
       headers: authorizationHeader,
     });
   }
@@ -78,7 +78,7 @@ export class HttpAPIService implements APIService {
   public async forceSignOut() {
     const authorizationHeader = await this.getAuthorizationHeader();
     try {
-      await this.api.post("main", "/forceSignOut", {
+      await this.api.post("main", "forceSignOut", {
         headers: authorizationHeader,
       });
     } finally {

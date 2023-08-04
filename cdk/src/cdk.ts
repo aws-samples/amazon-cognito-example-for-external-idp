@@ -259,20 +259,9 @@ export class BackendStack extends cdk.Stack {
       providerArns: [userPool.userPoolArn],
     });
 
-    // ------------------------------------------------------------------------
-    // Root (/) - no authorization required
-    // ------------------------------------------------------------------------
-
     const rootResource = api.root;
 
-    rootResource.addMethod("ANY", integration);
-
-    // ------------------------------------------------------------------------
-    // All Other Paths (/{proxy+}) - authorization required
-    // ------------------------------------------------------------------------
-
-    // all other paths require the cognito authorizer (validates the JWT and passes it to the lambda)
-
+    // all paths require the cognito authorizer (validates the JWT and passes it to the lambda)
     const proxyResource = rootResource.addResource("{proxy+}");
 
     const method = proxyResource.addMethod("ANY", integration, {
