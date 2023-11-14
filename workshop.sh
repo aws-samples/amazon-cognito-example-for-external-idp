@@ -3,6 +3,9 @@
 export AWS_SDK_LOAD_CONFIG=1 # allows the SDK to load from config. see https://github.com/aws/aws-sdk-js/pull/1391
 export STACK_NAME=ExternalIdPDemo
 export STACK_ACCOUNT=$(aws sts get-caller-identity --query "Account" --output text)
+EC2_AVAIL_ZONE=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
+export EC2_REGION="`echo \"$EC2_AVAIL_ZONE\" | sed 's/[a-z]$//'`"
+aws configure set default.region ${EC2_REGION}
 export STACK_REGION=$(aws configure get region)
 export COGNITO_DOMAIN_NAME=auth-${STACK_ACCOUNT}-${STACK_REGION}
 export APP_FRONTEND_DEPLOY_MODE=cloudfront
@@ -35,6 +38,7 @@ npm run build
 cd ..
 echo "Build successful"
 
+touch ~/.aws/config
 cd cdk
 npm run cdk -- bootstrap
 cd ..
