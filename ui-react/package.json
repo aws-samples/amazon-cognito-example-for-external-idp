@@ -10,7 +10,7 @@
   "description": "The frontend of the demo",
   "dependencies": {
     "@aws-amplify/ui-react": "^5.0.6",
-    "aws-amplify": "^5.3.12",
+    "aws-amplify": "^6.4.3",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
     "react-scripts": "^5.0.1"
