@@ -9,8 +9,8 @@
   },
   "description": "The frontend of the demo",
   "dependencies": {
-    "@aws-amplify/ui-react": "^5.0.6",
-    "aws-amplify": "^6.4.3",
+    "@aws-amplify/ui-react": "6.5.5",
+    "aws-amplify": "6.7.0",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
     "react-scripts": "^5.0.1"

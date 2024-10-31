@@ -1,6 +1,6 @@
 import * as aws from "aws-sdk";
 import {CloudFormation} from "aws-sdk";
-import apigateway = require("@aws-cdk/aws-apigateway");
+import apigateway = require("aws-cdk-lib/aws-apigateway");
 import {URL} from "url";
 
 export class Utils {

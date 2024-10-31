@@ -25,19 +25,12 @@
   "devDependencies": {
     "@types/aws-lambda": "^8.10.51",
     "@types/node": "^14.0.1",
-    "aws-cdk": "^1.95.1",
     "ts-node": "^8.10.1",
     "typescript": "^3.9.2"
   },
   "dependencies": {
-    "@aws-cdk/aws-apigateway": "~1.180.0",
-    "@aws-cdk/aws-cognito": "~1.180.0",
-    "@aws-cdk/aws-dynamodb": "~1.180.0",
-    "@aws-cdk/aws-lambda": "~1.180.0",
-    "@aws-cdk/aws-sam": "~1.180.0",
-    "@aws-cdk/aws-s3": "~1.180.0",
-    "@aws-cdk/aws-cloudfront": "~1.180.0",
-    "@aws-cdk/core": "~1.180.0",
+    "aws-cdk": "^2.164.1",
+    "aws-cdk-lib": "^2.164.1",
     "aws-sdk": "^2.1354.0",
     "source-map-support": "^0.5.19"
   }
