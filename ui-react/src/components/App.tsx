@@ -1,8 +1,7 @@
-// App.js
-import React, {ChangeEvent, Component, FormEvent, Fragment} from 'react';
+import {ChangeEvent, Component, FormEvent, Fragment} from 'react';
 import './App.css';
-import {Auth, Hub} from 'aws-amplify';
-import {CognitoUser} from '@aws-amplify/auth';
+import {  signOut, signInWithRedirect, fetchAuthSession } from 'aws-amplify/auth';
+import { Hub } from 'aws-amplify/utils';
 import {Pet} from "../model/pet";
 import {User} from "../model/user";
 import {APIService} from "../service/APIService";
@@ -31,13 +30,11 @@ export interface State {
 class App extends Component<AppProps, State> {
 
   private apiService: APIService;
+  private user: User | undefined;
 
   constructor(props: AppProps) {
-
     super(props);
-
     this.apiService = props.apiService;
-
     this.state = {
       authState: 'loading',
     }
@@ -45,25 +42,33 @@ class App extends Component<AppProps, State> {
 
   async componentDidMount() {
     console.log("componentDidMount");
-    Hub.listen('auth', async ({payload: {event, data}}) => {
-      switch (event) {
-        case 'cognitoHostedUI':
-          let user = await this.getUser();
+    Hub.listen('auth', async ({payload}) => {
+      switch (payload.event) {
+        case 'signInWithRedirect':
+          this.user = await this.getUser();
           // workaround for FF bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1422334
-          // eslint-disable-next-line
-          // noinspection SillyAssignmentJS
           window.location.hash = window.location.hash;
-          this.setState({authState: 'signedIn', user: user});
+          this.setState({authState: 'signedIn', user: this.user});
           break;
-        case 'cognitoHostedUI_failure':
-          this.setState({authState: 'signedOut', user: null, error: data});
+        case 'signInWithRedirect_failure':
+          this.setState({
+            authState: 'signedOut', 
+            user: null, 
+            error: payload.message || 'Sign in failed'
+          });
+          break;
+        case 'signedIn':
+          this.user = await this.getUser();
+          this.setState({authState: 'signedIn', user: this.user});
+          break;
+        case 'signedOut':
+          this.setState({authState: 'signedOut', user: null});
           break;
         default:
           break;
       }
     });
 
-    // if the URL contains ?identity_provider=x, and the user is signed out, we redirect to the IdP on load
     const urlParams = new URLSearchParams(window.location.search);
     const idpParamName = 'identity_provider';
     const idp = urlParams.get(idpParamName);
@@ -71,7 +76,6 @@ class App extends Component<AppProps, State> {
     try {
       let user = await this.getUser();
 
-      // remove identity_provider query param (not needed if signed in successfully)
       if (idp) {
         urlParams.delete(idpParamName);
         const params = urlParams.toString();
@@ -80,9 +84,12 @@ class App extends Component<AppProps, State> {
 
       this.setState({authState: 'signedIn', user: user});
     } catch (e) {
-      // user is not authenticated, and we have an IdP in the request
       if (e === 'not authenticated' && idp) {
-        await Auth.federatedSignIn({customProvider: idp});
+        await signInWithRedirect({
+          provider: {
+            custom: 'Idp'
+          }
+        });
       } else {
         console.warn(e);
         this.setState({authState: 'signedOut', user: null});
@@ -91,13 +98,31 @@ class App extends Component<AppProps, State> {
   }
 
   private async getUser() {
-    let cognitoUser: CognitoUser = await Auth.currentAuthenticatedUser();
-    return new User(cognitoUser);
+    try {
+      const {
+        tokens: session
+      } = await fetchAuthSession();
+      const user = new User(session);
+      return user;
+    } catch (error) {
+      console.error('Authentication error:', error);
+      throw new Error('not authenticated');
+    }
   }
 
   async componentDidUpdate(prevProps: Readonly<any>, prevState: Readonly<State>) {
     if (prevState.authState !== this.state.authState && this.state.authState === "signedIn") {
       await this.getAllPets();
+    }
+  }
+
+  async signOut() {
+    try {
+      this.setState({authState: 'signedOut', pets: null, user: null});
+      await signOut();
+      await this.apiService.forceSignOut();
+    } catch (e) {
+      console.log(e);
     }
   }
 
@@ -139,10 +164,20 @@ class App extends Component<AppProps, State> {
 
               {authState === 'loading' && (<div>loading...</div>)}
               {authState === 'signedOut' &&
-              <Fragment>
-              <button className="btn btn-primary m-1" onClick={() => Auth.federatedSignIn({customProvider: "IdP"})}>Single Sign On</button>
-              <button className="btn btn-primary m-1" onClick={() => Auth.federatedSignIn()}>Sign In / Sign Up</button>
-              </Fragment>
+                <Fragment>
+                  <button className="btn btn-primary m-1" 
+                          onClick={() => signInWithRedirect({
+                            provider: {
+                              custom: 'Idp'
+                            }
+                          })}>
+                    Single Sign On
+                  </button>
+                  <button className="btn btn-primary m-1" 
+                          onClick={() => signInWithRedirect()}>
+                    Sign In / Sign Up
+                  </button>
+                </Fragment>
               }
               {authState === 'signedIn' &&
 
@@ -299,15 +334,6 @@ class App extends Component<AppProps, State> {
       return this.getAllPets();
     } catch (e) {
       this.setState({error: "Failed to save pet. " + e, loading: false});
-    }
-  }
-
-  async signOut() {
-    try {
-      this.setState({authState: 'signedOut', pets: null, user: null});
-      await this.apiService.forceSignOut();
-    } catch (e) {
-      console.log(e);
     }
   }
 

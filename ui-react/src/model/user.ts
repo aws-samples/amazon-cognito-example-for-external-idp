@@ -1,16 +1,15 @@
-import {CognitoUser} from "@aws-amplify/auth";
+import { AuthTokens } from 'aws-amplify/auth';
 
 export class User {
-
   private readonly _attributes?: { [id: string]: any };
 
-  constructor(private cognitoUser: CognitoUser) {
-    // get user claims from the id token
-    this._attributes = this.cognitoUser?.getSignInUserSession()?.isValid() ? this.cognitoUser.getSignInUserSession()?.getIdToken()?.decodePayload() : undefined;
+  constructor(session: AuthTokens) {
+    this._attributes = session.idToken.payload;
+    console.log(this._attributes)
   }
 
   get groups(): string[] {
-    return this.attributes["cognito:groups"] || [];
+    return this.attributes['cognito:groups'] || [];
   }
 
   get attributes(): { [id: string]: any } {
@@ -18,12 +17,10 @@ export class User {
   }
 
   get name(): string {
-    return this.attributes["name"];
+    return this.attributes['name'];
   }
 
   get email(): string {
-    return this.attributes["email"];
+    return this.attributes['email'];
   }
-
 }
-

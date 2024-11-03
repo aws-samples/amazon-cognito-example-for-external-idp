@@ -6,37 +6,38 @@ export const REST_API_NAME = "main";
 
 export default {
   Auth: {
-
+    Cognito: {
     // REQUIRED - Amazon Cognito Region
-    region: autoGenConfig.region,
-
+      region: autoGenConfig.region,
     // OPTIONAL - Amazon Cognito User Pool ID
-    userPoolId: autoGenConfig.cognitoUserPoolId,
+      userPoolId: autoGenConfig.cognitoUserPoolId,
 
     // OPTIONAL - Amazon Cognito Web Client ID (26-char alphanumeric string)
-    userPoolWebClientId: autoGenConfig.cognitoUserPoolAppClientId,
+      userPoolClientId: autoGenConfig.cognitoUserPoolAppClientId,
 
     // OPTIONAL - Enforce user authentication prior to accessing AWS resources or not
     // mandatorySignIn: false,
+    loginWith: {
+      oauth: {
 
-    oauth: {
+        domain: autoGenConfig.cognitoDomain,
 
-      domain: autoGenConfig.cognitoDomain,
+        scopes: ['phone', 'email', 'openid', 'profile'],
 
-      scope: ['phone', 'email', 'openid', 'profile'],
+        redirectSignIn: [autoGenConfig.appUrl],
 
-      redirectSignIn: autoGenConfig.appUrl,
+        redirectSignOut: [autoGenConfig.appUrl],
 
-      redirectSignOut: autoGenConfig.appUrl,
+        responseType: 'code' as const, // or token
 
-      responseType: 'code', // or token
-
-      // optional, for Cognito hosted ui specified options
-      options: {
-        // Indicates if the data collection is enabled to support Cognito advanced security features. By default, this flag is set to true.
-        AdvancedSecurityDataCollectionFlag: true
+        // optional, for Cognito hosted ui specified options
+        options: {
+          // Indicates if the data collection is enabled to support Cognito advanced security features. By default, this flag is set to true.
+          AdvancedSecurityDataCollectionFlag: true
+        }
       }
     }
+  }
 
     /*// OPTIONAL - Configuration for cookie storage
     // Note: if the secure flag is set to true, then the cookie transmission requires a secure protocol
@@ -61,11 +62,11 @@ export default {
   },
 
   API: {
-    endpoints: [
-      {
+    REST: {
+      [REST_API_NAME]: {
         name: REST_API_NAME,
         endpoint: autoGenConfig.apiUrl // for local test change to something such as 'http://localhost:3001'
       }
-    ]
+    }
   }
 }
