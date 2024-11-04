@@ -1,6 +1,6 @@
 import {ChangeEvent, Component, FormEvent, Fragment} from 'react';
 import './App.css';
-import {  signOut, signInWithRedirect, fetchAuthSession } from 'aws-amplify/auth';
+import { signOut, signInWithRedirect, fetchAuthSession } from 'aws-amplify/auth';
 import { Hub } from 'aws-amplify/utils';
 import {Pet} from "../model/pet";
 import {User} from "../model/user";

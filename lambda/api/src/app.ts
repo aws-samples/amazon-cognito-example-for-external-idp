@@ -1,6 +1,6 @@
 import express = require("express");
-import CognitoIdentityServiceProvider = require("aws-sdk/clients/cognitoidentityserviceprovider");
-import {Express, json, Request, Response, urlencoded} from "express";
+import { CognitoIdentityProviderClient, AdminUserGlobalSignOutCommand } from "@aws-sdk/client-cognito-identity-provider";
+import {Express, json, Request, Response, urlencoded, RequestHandler} from "express";
 import cors from "cors";
 import {eventContext} from "aws-serverless-express/middleware";
 
@@ -16,7 +16,7 @@ export interface AppOptions {
   allowedOrigin: string;
   userPoolId: string;
   storageService: StorageService;
-  cognito: CognitoIdentityServiceProvider;
+  cognito: CognitoIdentityProviderClient;
   expressApp?: Express; // intended for unit testing / mock purposes
   forceSignOutHandler?: ForceSignOutHandler;
 }
@@ -38,8 +38,8 @@ export class App {
       origin: [(opts.allowedOrigin)],
     }));
 
-    app.use(json());
-    app.use(urlencoded({extended: true}));
+    app.use(json() as RequestHandler);
+    app.use(urlencoded({extended: true}) as RequestHandler);
 
     app.use(eventContext());
 
@@ -184,7 +184,12 @@ export class App {
 
     app.post("/forceSignOut", async (req: Request, res: Response) => {
       // all tokens issued before this call will no longer be allowed to be used
-      await opts.cognito.adminUserGlobalSignOut({Username: req.username, UserPoolId: opts.userPoolId}).promise();
+      const params = {
+        UserPoolId: opts.userPoolId,
+        Username: req.username,
+      }
+      const command = new AdminUserGlobalSignOutCommand(params);
+      await opts.cognito.send(command);
       if (opts.forceSignOutHandler) {
         await opts.forceSignOutHandler.forceSignOut(req);
       }

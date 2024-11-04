@@ -48,7 +48,7 @@ export class BackendStack extends cdk.Stack {
     const adminsGroupName = Utils.getEnv("ADMINS_GROUP_NAME", "pet-app-admins");
     const usersGroupName = Utils.getEnv("USERS_GROUP_NAME", "pet-app-users");
     const lambdaMemory = parseInt(Utils.getEnv("LAMBDA_MEMORY", "128"));
-    const nodeRuntime: Runtime = lambda.Runtime.NODEJS_16_X;
+    const nodeRuntime: Runtime = lambda.Runtime.NODEJS_20_X;
     const authorizationHeaderName = "Authorization";
     const groupsAttributeClaimName = "custom:" + groupsAttributeName;
 
@@ -427,7 +427,8 @@ export class BackendStack extends cdk.Stack {
       "UIDistribution", {
         defaultBehavior: {
             origin: origins.S3BucketOrigin.withOriginAccessControl(uiBucket)
-        }
+        },
+        defaultRootObject: "index.html"
       }
     );
 

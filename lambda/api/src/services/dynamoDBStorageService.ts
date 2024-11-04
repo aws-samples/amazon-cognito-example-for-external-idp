@@ -1,23 +1,22 @@
-import aws = require("aws-sdk");
-import {DocumentClient} from "aws-sdk/lib/dynamodb/document_client";
+
+import { DynamoDBDocumentClient, PutCommand, GetCommand, ScanCommand, DeleteCommand, ScanCommandInput } from "@aws-sdk/lib-dynamodb";
 import {StorageService} from "./storageService";
-import {ScanInput} from "aws-sdk/clients/dynamodb";
 import {Pet} from "../models/pet";
 
 export class DynamoDBStorageService implements StorageService {
 
   constructor(private readonly tableName: string,
-              private readonly docClient: DocumentClient = new aws.DynamoDB.DocumentClient()) {
+              private readonly docClient: DynamoDBDocumentClient) {
   }
 
   public async getPet(id: string): Promise<Pet | null> {
 
     try {
-      const data = await this.docClient.get({
+      const data = await this.docClient.send(new GetCommand({
         TableName: this.tableName,
         Key: {id},
         ConsistentRead: true,
-      }).promise();
+      }));
       if (data && data.Item) {
         return data.Item as Pet;
       }
@@ -30,10 +29,10 @@ export class DynamoDBStorageService implements StorageService {
 
   public async savePet(pet: Pet): Promise<void> {
     try {
-      await this.docClient.put({
+      await this.docClient.send(new PutCommand({
         TableName: this.tableName,
         Item: pet,
-      }).promise();
+      }));
     } catch (ex) {
       console.warn("Error saving entry", ex);
       throw ex;
@@ -45,11 +44,11 @@ export class DynamoDBStorageService implements StorageService {
 
       const result: Pet[] = [];
 
-      const params: ScanInput = {TableName: this.tableName};
+      const params: ScanCommandInput = {TableName: this.tableName};
 
       while (true) {
 
-        const data = await this.docClient.scan(params).promise();
+        const data = await this.docClient.send(new ScanCommand(params));
         result.push(...data.Items as Pet[]);
 
         if (!data.LastEvaluatedKey) {
@@ -70,7 +69,7 @@ export class DynamoDBStorageService implements StorageService {
 
   public async deletePet(id: string): Promise<void> {
     try {
-      await this.docClient.delete({TableName: this.tableName, Key: {id}}).promise();
+      await this.docClient.send(new DeleteCommand({TableName: this.tableName, Key: {id}}));
     } catch (ex) {
       console.warn("Error deleting entry", ex);
       throw ex;
