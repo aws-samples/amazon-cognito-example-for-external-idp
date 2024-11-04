@@ -1,27 +1,27 @@
-import apigateway = require("@aws-cdk/aws-apigateway");
-import cdk = require("@aws-cdk/core");
-import dynamodb = require("@aws-cdk/aws-dynamodb");
-import lambda = require("@aws-cdk/aws-lambda");
-import cognito = require("@aws-cdk/aws-cognito");
-import iam = require("@aws-cdk/aws-iam");
-import s3 = require("@aws-cdk/aws-s3");
-import cloudfront = require("@aws-cdk/aws-cloudfront");
-import { BillingMode, StreamViewType } from "@aws-cdk/aws-dynamodb";
+import apigateway = require("aws-cdk-lib/aws-apigateway");
+import cdk = require("aws-cdk-lib/core");
+import dynamodb = require("aws-cdk-lib/aws-dynamodb");
+import lambda = require("aws-cdk-lib/aws-lambda");
+import cognito = require("aws-cdk-lib/aws-cognito");
+import iam = require("aws-cdk-lib/aws-iam");
+import s3 = require("aws-cdk-lib/aws-s3");
+import cloudfront = require("aws-cdk-lib/aws-cloudfront");
+import { BillingMode, StreamViewType } from "aws-cdk-lib/aws-dynamodb";
 import "source-map-support/register";
-import { AuthorizationType } from "@aws-cdk/aws-apigateway";
+import { AuthorizationType } from "aws-cdk-lib/aws-apigateway";
 import {
   CfnUserPool,
   CfnUserPoolIdentityProvider,
   UserPool,
-} from "@aws-cdk/aws-cognito";
+} from "aws-cdk-lib/aws-cognito";
 import { Utils } from "./utils";
-import { Runtime } from "@aws-cdk/aws-lambda";
+import { Runtime } from "aws-cdk-lib/aws-lambda";
 
 import { URL } from "url";
-import { Duration } from "@aws-cdk/core";
-import { Bucket } from "@aws-cdk/aws-s3";
-import { CloudFrontWebDistribution } from "@aws-cdk/aws-cloudfront";
-
+import { Duration } from "aws-cdk-lib/core";
+import { Bucket } from "aws-cdk-lib/aws-s3";
+import { Distribution } from "aws-cdk-lib/aws-cloudfront";
+import origins = require("aws-cdk-lib/aws-cloudfront-origins")
 /**
  * Define a CloudFormation stack that creates a serverless application with
  * Amazon Cognito and an external SAML based IdP
@@ -48,7 +48,7 @@ export class BackendStack extends cdk.Stack {
     const adminsGroupName = Utils.getEnv("ADMINS_GROUP_NAME", "pet-app-admins");
     const usersGroupName = Utils.getEnv("USERS_GROUP_NAME", "pet-app-users");
     const lambdaMemory = parseInt(Utils.getEnv("LAMBDA_MEMORY", "128"));
-    const nodeRuntime: Runtime = lambda.Runtime.NODEJS_16_X;
+    const nodeRuntime: Runtime = lambda.Runtime.NODEJS_20_X;
     const authorizationHeaderName = "Authorization";
     const groupsAttributeClaimName = "custom:" + groupsAttributeName;
 
@@ -121,7 +121,7 @@ export class BackendStack extends cdk.Stack {
 
     // See also:
     // - https://aws.amazon.com/cognito/
-    // - https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cognito.CfnIdentityPool.html
+    // - https://docs.aws.amazon.com/cdk/api/latest/docs/aws-cdk-lib_aws-cognito.CfnIdentityPool.html
 
     // high level construct
     const userPool: UserPool = new cognito.UserPool(this, id + "Pool", {
@@ -170,14 +170,14 @@ export class BackendStack extends cdk.Stack {
 
     const itemsTable = new dynamodb.Table(this, "ItemsTable", {
       billingMode: BillingMode.PAY_PER_REQUEST,
-      serverSideEncryption: true,
+      encryption: dynamodb.TableEncryption.AWS_MANAGED,
       stream: StreamViewType.NEW_AND_OLD_IMAGES,
       partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
     });
 
     const usersTable = new dynamodb.Table(this, "UsersTable", {
       billingMode: BillingMode.PAY_PER_REQUEST,
-      serverSideEncryption: true,
+      encryption: dynamodb.TableEncryption.AWS_MANAGED,
       stream: StreamViewType.NEW_AND_OLD_IMAGES,
       partitionKey: { name: "username", type: dynamodb.AttributeType.STRING },
       timeToLiveAttribute: "ttl",
@@ -420,25 +420,15 @@ export class BackendStack extends cdk.Stack {
 
   private createCloudFrontDistribution(
     uiBucket: Bucket
-  ): CloudFrontWebDistribution {
-    const cloudFrontOia = new cloudfront.OriginAccessIdentity(this, "OIA", {
-      comment: `OIA for ${uiBucket.bucketName}`,
-    });
-
+  ): Distribution {
     // create CloudFront distribution
-    const distribution = new cloudfront.CloudFrontWebDistribution(
+    const distribution = new cloudfront.Distribution(
       this,
-      "UIDistribution",
-      {
-        originConfigs: [
-          {
-            s3OriginSource: {
-              s3BucketSource: uiBucket,
-              originAccessIdentity: cloudFrontOia,
-            },
-            behaviors: [{ isDefaultBehavior: true }],
-          },
-        ],
+      "UIDistribution", {
+        defaultBehavior: {
+            origin: origins.S3BucketOrigin.withOriginAccessControl(uiBucket)
+        },
+        defaultRootObject: "index.html"
       }
     );
 

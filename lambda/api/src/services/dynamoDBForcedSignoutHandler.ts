@@ -1,12 +1,11 @@
 import {ForceSignOutHandler} from "./authorizationMiddleware";
 import {Request} from "express";
-import {DocumentClient} from "aws-sdk/lib/dynamodb/document_client";
-import aws = require("aws-sdk");
+import { DynamoDBDocumentClient, PutCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 
 export class DynamoDBForcedSignoutHandler implements ForceSignOutHandler {
 
   constructor(private readonly tableName: string,
-              private readonly docClient: DocumentClient = new aws.DynamoDB.DocumentClient(),
+              private readonly docClient: DynamoDBDocumentClient,
               private readonly keyAttributeName: string = "username",
               private readonly lastForceSignOutTimeAttributeName: string = "lastForceSignOutTime",
               private readonly ttlAttributeName: string = "ttl" ,
@@ -25,7 +24,8 @@ export class DynamoDBForcedSignoutHandler implements ForceSignOutHandler {
         Key: key,
       };
 
-      const result = await this.docClient.get(params).promise();
+      const command = new GetCommand(params)
+      const result = await this.docClient.send(command);
 
       if (result.Item && typeof result.Item[this.lastForceSignOutTimeAttributeName] === "number") {
 
@@ -56,10 +56,11 @@ export class DynamoDBForcedSignoutHandler implements ForceSignOutHandler {
 
     try {
 
-      await this.docClient.put({
+      const command = new PutCommand({
         TableName: this.tableName,
         Item: item,
-      }).promise();
+      });
+      await this.docClient.send(command);
 
     } catch (ex) {
       console.error("Error revoking token: ", ex);

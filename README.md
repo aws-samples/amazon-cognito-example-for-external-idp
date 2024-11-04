@@ -152,15 +152,6 @@ NOTES:
 - Run `./build.sh` to compile all packages
 - Run `./clean.sh` to clean compiled packages
 
-# Getting Started - Windows
-
-Windows command-line files will be coming soon, in the meantime you can use either of these solutions in order to run sh files
-
-- Git BASH: https://gitforwindows.org/
-- Windows Subsystem for Linux: https://docs.microsoft.com/en-us/windows/wsl/install-win10
-- MinGW: http://www.mingw.org/
-- Cygwin: https://www.cygwin.com/
-
 ## IdP Configuration Instructions
 
 - **Okta**:

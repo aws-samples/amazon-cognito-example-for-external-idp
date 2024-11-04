@@ -10,6 +10,9 @@ This walkthrough will help guide you through creating a working Okta Application
 
 1. Sign up for a developer account on [Okta](https://developer.okta.com/) using your corporate credentials.
 2. Activate your account and sign into your Okta domain *stated in the email*.
+
+**NOTE: THE Okta UI may be slightly different, but the steps involved remain the same**
+
 3. Go to the Admin dashboard by clicking on the **Admin** button on the top-right corner of the page.
 4. In the Admin dashboard, go to the top-left of the page where it says **Developer Console** and change it to **Classic UI**.
 
