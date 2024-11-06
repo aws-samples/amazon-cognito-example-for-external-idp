@@ -36,11 +36,15 @@ export class BackendStack extends cdk.Stack {
 
     const domain = Utils.getEnv("COGNITO_DOMAIN_NAME");
     const identityProviderName = Utils.getEnv("IDENTITY_PROVIDER_NAME", "");
+    const OIDCProviderName = Utils.getEnv("OIDC_PROVIDER_NAME", "");
 
     const identityProviderMetadataURLOrFile = Utils.getEnv(
       "IDENTITY_PROVIDER_METADATA",
       ""
     );
+    const OIDCClientId = Utils.getEnv('OIDC_CLIENT_ID')
+    const OIDCClientSecret = Utils.getEnv('OIDC_CLIENT_SECRET')
+    const OIDCIssuerUrl = Utils.getEnv('OIDC_ISSUER_URL')
 
     const appFrontendDeployMode = Utils.getEnv("APP_FRONTEND_DEPLOY_MODE", "");
 
@@ -317,6 +321,28 @@ export class BackendStack extends cdk.Stack {
       });
 
       supportedIdentityProviders.push(identityProviderName);
+    }
+
+    if (OIDCProviderName && OIDCClientId && OIDCClientSecret && OIDCIssuerUrl) {
+      const oidcProvider = new cognito.UserPoolIdentityProviderOidc(this, 'OidcProvider', {
+        userPool,
+        name: OIDCProviderName,
+        clientId: OIDCClientId,
+        clientSecret: OIDCClientSecret,
+        issuerUrl: OIDCIssuerUrl,
+        attributeRequestMethod: cognito.OidcAttributeRequestMethod.GET,
+        scopes: ['openid', 'profile', 'email'],
+        attributeMapping: {
+          email: cognito.ProviderAttribute.other('email'),
+          givenName: cognito.ProviderAttribute.other('given_name'),
+          familyName: cognito.ProviderAttribute.other('family_name'),
+          custom: {
+            [groupsAttributeClaimName]: cognito.ProviderAttribute.other('groups'),
+          }
+        },
+      });
+  
+      supportedIdentityProviders.push(OIDCProviderName);
     }
 
     // ========================================================================
