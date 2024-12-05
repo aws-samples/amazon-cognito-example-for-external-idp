@@ -44,7 +44,7 @@
     "@aws-sdk/lib-dynamodb": "^3.685.0",
     "aws-serverless-express": "^3.3.8",
     "cors": "^2.8.5",
-    "express": "^4.21.1",
+    "express": "^4.21.2",
     "uuid": "^8.0.0"
   }
 }
