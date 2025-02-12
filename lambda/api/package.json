@@ -34,7 +34,7 @@
     "chai": "^4.2.0",
     "copy-node-modules": "^1.1.1",
     "dynamodb-local": "^0.0.31",
-    "mocha": "^10.1.0",
+    "mocha": "^10.8.2",
     "nyc": "^15.0.1",
     "ts-node": "^10.9.2",
     "tslint": "^6.1.2",
