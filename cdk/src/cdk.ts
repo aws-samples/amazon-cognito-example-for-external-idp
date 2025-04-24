@@ -42,9 +42,9 @@ export class BackendStack extends cdk.Stack {
       "IDENTITY_PROVIDER_METADATA",
       ""
     );
-    const OIDCClientId = Utils.getEnv('OIDC_CLIENT_ID')
-    const OIDCClientSecret = Utils.getEnv('OIDC_CLIENT_SECRET')
-    const OIDCIssuerUrl = Utils.getEnv('OIDC_ISSUER_URL')
+    const OIDCClientId = Utils.getEnv('OIDC_CLIENT_ID', '')
+    const OIDCClientSecret = Utils.getEnv('OIDC_CLIENT_SECRET', '')
+    const OIDCIssuerUrl = Utils.getEnv('OIDC_ISSUER_URL', '')
 
     const appFrontendDeployMode = Utils.getEnv("APP_FRONTEND_DEPLOY_MODE", "");
 
